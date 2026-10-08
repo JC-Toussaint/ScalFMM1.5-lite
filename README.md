@@ -13,9 +13,19 @@ Version épurée de [ScalFMM](https://gitlab.inria.fr/solverstack/ScalFMM) 1.5
     `FChebDenseKernel`) et `Kernels/Interpolation` ;
 - P2P direct : `Kernels/P2P`.
 
+Modifications par rapport à l'original (performances du noyau Chebyshev, résultats inchangés) :
+
+- `Utils/FBlas.hpp` : les petits produits matriciels (M*N*K ≤ `SCALFMM_SMALL_BLAS_MAX`, 4096 par
+  défaut : P2M, M2M, L2L, L2P jusqu'à l'ordre 8) sont faits par des boucles au lieu d'appels BLAS.
+  Sur ces tailles l'appel BLAS coûte plus que le calcul, et OpenBLAS (version pthread) sérialise
+  les appels simultanés des threads OpenMP : P2M et M2M étaient plus lents à 8 threads qu'à 1 ;
+- `FBlas::setSingleThreaded()`, appelé par le constructeur des noyaux Chebyshev : OpenBLAS sur
+  un seul thread, BLAS étant appelé depuis les threads OpenMP de l'algorithme (sans cela, M2L à
+  l'ordre 8 est jusqu'à 10 fois plus lent).
+
 Supprimés : MPI, StarPU, CUDA/OpenCL, GroupTree, périodicité, FFT et noyaux
 Uniform/Taylor/Spherical, lecteurs de fichiers, Addons, documentation, tests unitaires.
-Les sources conservées sont identiques à l'original (patch `memcpy` de
+Les autres sources conservées sont identiques à l'original (patch `memcpy` de
 `FBasicParticleContainer.hpp` inclus).
 
 ## Dépendances

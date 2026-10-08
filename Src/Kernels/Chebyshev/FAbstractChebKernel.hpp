@@ -98,7 +98,7 @@ public:
       BoxWidthLeaf(BoxWidth / FReal(FMath::pow(2, inTreeHeight - 1))),
       BoxWidthExtension(inBoxWidthExtension)
   {
-    /* empty */
+    FBlas::setSingleThreaded();
   }
 
   virtual ~FAbstractChebKernel(){

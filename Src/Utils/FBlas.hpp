@@ -5,6 +5,8 @@
 #include "FGlobal.hpp"
 #include "FFortranMangling.hpp"
 
+#include <cstddef>
+
 #ifndef SCALFMM_USE_BLAS
 #error The BLAS header is included while SCALFMM_USE_BLAS is turned OFF
 #endif
@@ -149,7 +151,82 @@ extern "C"
 }
 
 
+#if defined(__GNUC__)
+// OpenBLAS (weak symbol: null if the BLAS library is not OpenBLAS)
+extern "C" void openblas_set_num_threads(int) __attribute__((weak));
+#endif
+
 namespace FBlas {
+
+  // BLAS is called from inside the OpenMP threads of the FMM algorithms: a multithreaded
+  // BLAS (OpenBLAS pthread) would compete with them (Chebyshev M2L up to 10 times slower).
+  inline void setSingleThreaded()
+  {
+#if defined(__GNUC__)
+    if (openblas_set_num_threads) openblas_set_num_threads(1);
+#endif
+  }
+
+  // Small products (Chebyshev P2M, M2M, L2L, L2P, M2L): plain loops instead of BLAS.
+  // For such sizes a BLAS call costs more than the product itself, and some BLAS
+  // (OpenBLAS pthread) serialize concurrent calls from the OpenMP threads.
+  // Same arguments as the Fortran routines; returns false if the product is too
+  // large (the caller then calls BLAS).
+  namespace small {
+#ifndef SCALFMM_SMALL_BLAS_MAX
+#define SCALFMM_SMALL_BLAS_MAX 4096   // M*N*K: Chebyshev M2M, L2L, P2M, L2P up to ORDER 8
+#endif
+    // C = beta C + d op(A) op(B), op(A) M x K, op(B) K x N, column major
+    template <class T>
+    inline bool gemm(const char* ta, const char* tb, const unsigned* pM, const unsigned* pN, const unsigned* pK,
+                     const T* pd, const T* A, const unsigned* pldA, const T* B, const unsigned* pldB,
+                     const T* pbeta, T* C, const unsigned* pldC)
+    {
+      const unsigned M = *pM, N = *pN, K = *pK, ldA = *pldA, ldB = *pldB, ldC = *pldC;
+      if (std::size_t(M) * N * K > SCALFMM_SMALL_BLAS_MAX) return false;
+      const bool transA = (*ta == 'T'), transB = (*tb == 'T');
+      const T d = *pd, beta = *pbeta;
+      for (unsigned j = 0; j < N; ++j) {
+        T* const Cj = C + std::size_t(j) * ldC;
+        if (beta == T(0))      for (unsigned i = 0; i < M; ++i) Cj[i] = T(0);
+        else if (beta != T(1)) for (unsigned i = 0; i < M; ++i) Cj[i] *= beta;
+        if (!transA) {
+          for (unsigned k = 0; k < K; ++k) {
+            const T b = d * (transB ? B[j + std::size_t(k) * ldB] : B[k + std::size_t(j) * ldB]);
+            const T* const Ak = A + std::size_t(k) * ldA;
+            for (unsigned i = 0; i < M; ++i) Cj[i] += b * Ak[i];
+          }
+        }
+        else {
+          for (unsigned i = 0; i < M; ++i) {
+            const T* const Ai = A + std::size_t(i) * ldA;
+            T s = T(0);
+            // omp simd: vectorized reduction without -ffast-math (deterministic for a given binary)
+            if (!transB) {
+              const T* const Bj = B + std::size_t(j) * ldB;
+#pragma omp simd reduction(+:s)
+              for (unsigned k = 0; k < K; ++k) s += Ai[k] * Bj[k];
+            }
+            else {
+              for (unsigned k = 0; k < K; ++k) s += Ai[k] * B[j + std::size_t(k) * ldB];
+            }
+            Cj[i] += d * s;
+          }
+        }
+      }
+      return true;
+    }
+    // y = beta y + d op(A) x, A m x n (lda), unit increments
+    template <class T>
+    inline bool gemv(const char* ta, const unsigned* pm, const unsigned* pn, const T* pd, const T* A,
+                     const unsigned* plda, const T* x, const unsigned*, const T* pbeta, T* y, const unsigned*)
+    {
+      const unsigned one = 1;
+      if (*ta == 'T') { const unsigned ldx = *pm; return gemm(ta, "N", pn, &one, pm, pd, A, plda, x, &ldx, pbeta, y, pn); }
+      const unsigned ldx = *pn;
+      return gemm(ta, "N", pm, &one, pn, pd, A, plda, x, &ldx, pbeta, y, pm);
+    }
+  }
 
   // copy
   inline void copy(const unsigned n, double* orig, double* dest)
@@ -238,9 +315,9 @@ namespace FBlas {
   //	{	cblas_sgemv(CblasColMajor, CblasNoTrans, m, n, d, A, m, x, scalfmm::N_ONE, scalfmm::S_ZERO, y, scalfmm::N_ONE); }
   // y = d Ax
   inline void gemv(const unsigned m, const unsigned n, double d, double* A, double *x, double *y)
-  {	Fdgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE); }
+  { if (!small::gemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE)) Fdgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE); }
   inline void gemv(const unsigned m, const unsigned n, float d, float* A, float *x, float *y)
-  {	Fsgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE); }
+  { if (!small::gemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE)) Fsgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE); }
   inline void c_gemv(const unsigned m, const unsigned n, float* d, float* A, float *x, float *y)
   {	Fcgemv(scalfmm::JOB_STR, &m, &n, d, A, &m, x, &scalfmm::N_ONE, scalfmm::C_ZERO, y, &scalfmm::N_ONE); }
   inline void c_gemv(const unsigned m, const unsigned n, double* d, double* A, double *x, double *y)
@@ -253,9 +330,9 @@ namespace FBlas {
   //	{	cblas_sgemv(CblasColMajor, CblasNoTrans, m, n, d, A, m, x, scalfmm::N_ONE, scalfmm::S_ONE, y, scalfmm::N_ONE); }
   // y += d Ax
   inline void gemva(const unsigned m, const unsigned n, double d, double* A, double *x, double *y)
-  {	Fdgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE);	}
+  { if (!small::gemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE)) Fdgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE); }
   inline void gemva(const unsigned m, const unsigned n, float d, float* A, float *x, float *y)
-  {	Fsgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE);	}
+  { if (!small::gemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE)) Fsgemv(scalfmm::JOB_STR, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE); }
   inline void c_gemva(const unsigned m, const unsigned n, const float* d, const float* A, const float *x, float *y)
   {	Fcgemv(scalfmm::JOB_STR, &m, &n, d, A, &m, x, &scalfmm::N_ONE, scalfmm::C_ONE, y, &scalfmm::N_ONE);	}
   inline void c_gemva(const unsigned m, const unsigned n, const double* d, const double* A, const double *x, double *y)
@@ -268,9 +345,9 @@ namespace FBlas {
   //	{	cblas_sgemv(CblasColMajor, CblasTrans, m, n, d, A, m, x, scalfmm::N_ONE, scalfmm::S_ZERO, y, scalfmm::N_ONE); }
   // y = d A^T x
   inline void gemtv(const unsigned m, const unsigned n, double d, double* A, double *x, double *y)
-  {	Fdgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE); }
+  { if (!small::gemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE)) Fdgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ZERO, y, &scalfmm::N_ONE); }
   inline void gemtv(const unsigned m, const unsigned n, float d, float* A, float *x, float *y)
-  {	Fsgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE); }
+  { if (!small::gemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE)) Fsgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ZERO, y, &scalfmm::N_ONE); }
   inline void c_gemtv(const unsigned m, const unsigned n, float* d, float* A, float *x, float *y)
   {	Fcgemv(scalfmm::JOB_STR+1, &m, &n, d, A, &m, x, &scalfmm::N_ONE, scalfmm::C_ZERO, y, &scalfmm::N_ONE); }
   inline void c_gemtv(const unsigned m, const unsigned n, double* d, double* A, double *x, double *y)
@@ -287,9 +364,9 @@ namespace FBlas {
   //	{	cblas_sgemv(CblasColMajor, CblasTrans, m, n, d, A, m, x, scalfmm::N_ONE, scalfmm::S_ONE, y, scalfmm::N_ONE); }
   // y += d A^T x
   inline void gemtva(const unsigned m, const unsigned n, double d, double* A, double *x, double *y)
-  {	Fdgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE);	}
+  { if (!small::gemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE)) Fdgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::D_ONE, y, &scalfmm::N_ONE); }
   inline void gemtva(const unsigned m, const unsigned n, float d, float* A, float *x, float *y)
-  {	Fsgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE);	}
+  { if (!small::gemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE)) Fsgemv(scalfmm::JOB_STR+1, &m, &n, &d, A, &m, x, &scalfmm::N_ONE, &scalfmm::S_ONE, y, &scalfmm::N_ONE); }
   inline void c_gemtva(const unsigned m, const unsigned n, float* d, float* A, float *x, float *y)
   {	Fcgemv(scalfmm::JOB_STR+1, &m, &n, d, A, &m, x, &scalfmm::N_ONE, scalfmm::C_ONE, y, &scalfmm::N_ONE);	}
   inline void c_gemtva(const unsigned m, const unsigned n, double* d, double* A, double *x, double *y)
@@ -305,10 +382,10 @@ namespace FBlas {
   // C = d A B, A is m x p, B is p x n
   inline void gemm(unsigned m, unsigned p, unsigned n, double d,
 		   double* A, unsigned ldA, double* B, unsigned ldB, double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC)) Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC); }
   inline void gemm(unsigned m, unsigned p, unsigned n, float d,
 		   float* A, unsigned ldA, float* B, unsigned ldB, float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC)) Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC); }
   inline void c_gemm(const unsigned m, const unsigned p, const unsigned n, const float* d,
 		     float* A, const unsigned ldA, float* B, const unsigned ldB, float* C, const unsigned ldC)
   {
@@ -321,10 +398,10 @@ namespace FBlas {
   // C += d A B, A is m x p, B is p x n
   inline void gemma(unsigned m, unsigned p, unsigned n, double d,
 		    double* A, unsigned ldA, double* B, unsigned ldB,	double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC)) Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
   inline void gemma(unsigned m, unsigned p, unsigned n, float d,
 		    float* A, unsigned ldA, float* B, unsigned ldB,	float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC)) Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
   inline void c_gemma(unsigned m, unsigned p, unsigned n, float* d,
 		      float* A, unsigned ldA, float* B, unsigned ldB,	float* C, unsigned ldC)
   {	Fcgemm(scalfmm::JOB_STR, scalfmm::JOB_STR, &m, &n, &p, d, A, &ldA, B, &ldB, scalfmm::C_ONE, C, &ldC); }
@@ -335,10 +412,10 @@ namespace FBlas {
   // C = d A^T B, A is m x p, B is m x n
   inline void gemtm(unsigned m, unsigned p, unsigned n, double d,
 		    double* A, unsigned ldA, double *B, unsigned ldB,	double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC)) Fdgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC); }
   inline void gemtm(unsigned m, unsigned p, unsigned n, float d,
 		    float* A, unsigned ldA, float *B, unsigned ldB,	float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC)) Fsgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC); }
   inline void c_gemtm(unsigned m, unsigned p, unsigned n, float* d,
 		      float* A, unsigned ldA, float *B, unsigned ldB,	float* C, unsigned ldC)
   {	Fcgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, d, A, &ldA, B, &ldB, scalfmm::C_ZERO, C, &ldC);	}
@@ -355,10 +432,10 @@ namespace FBlas {
   // C += d A^T B, A is m x p, B is m x n
   inline void gemtma(unsigned m, unsigned p, unsigned n, double d,
 		     double* A, unsigned ldA, double *B, unsigned ldB, double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC)) Fdgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
   inline void gemtma(unsigned m, unsigned p, unsigned n, float d,
 		     float* A, unsigned ldA, float *B, unsigned ldB, float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC)) Fsgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
   inline void c_gemtma(unsigned m, unsigned p, unsigned n, float* d,
 		       float* A, unsigned ldA, float *B, unsigned ldB, float* C, unsigned ldC)
   {	Fcgemm(scalfmm::JOB_STR+1, scalfmm::JOB_STR, &p, &n, &m, d, A, &ldA, B, &ldB, scalfmm::C_ONE, C, &ldC); }
@@ -376,10 +453,10 @@ namespace FBlas {
   // C = d A B^T, A is m x p, B is n x p
   inline void gemmt(unsigned m, unsigned p, unsigned n, double d,
 		    double* A, unsigned ldA, double *B, unsigned ldB, double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC)) Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ZERO, C, &ldC); }
   inline void gemmt(unsigned m, unsigned p, unsigned n, float d,
 		    float* A, unsigned ldA, float *B, unsigned ldB,	float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC);	}
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC)) Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ZERO, C, &ldC); }
   inline void c_gemmt(unsigned m, unsigned p, unsigned n, float d,
 		      float* A, unsigned ldA, float *B, unsigned ldB, float* C, unsigned ldC)
   {	Fcgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, scalfmm::C_ZERO, C, &ldC); }
@@ -396,10 +473,10 @@ namespace FBlas {
   // C += d A B^T, A is m x p, B is n x p
   inline void gemmta(unsigned m, unsigned p, unsigned n, double d,
 		     double* A, unsigned ldA, double *B, unsigned ldB, double* C, unsigned ldC)
-  {	Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC)) Fdgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::D_ONE, C, &ldC); }
   inline void gemmta(unsigned m, unsigned p, unsigned n, float d,
 		     float* A, unsigned ldA, float *B, unsigned ldB, float* C, unsigned ldC)
-  {	Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
+  { if (!small::gemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC)) Fsgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, &d, A, &ldA, B, &ldB, &scalfmm::S_ONE, C, &ldC); }
   inline void c_gemmta(unsigned m, unsigned p, unsigned n, float* d,
 		       float* A, unsigned ldA, float *B, unsigned ldB, float* C, unsigned ldC)
   {	Fcgemm(scalfmm::JOB_STR, scalfmm::JOB_STR+1, &m, &n, &p, d, A, &ldA, B, &ldB, scalfmm::C_ONE, C, &ldC); }
