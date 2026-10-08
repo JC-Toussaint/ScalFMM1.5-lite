@@ -33,6 +33,20 @@ endif()
 # Dependencies: OpenMP, BLAS + LAPACK (Chebyshev kernel: SVD, gemm...)
 #===========================================================================
 find_package(OpenMP REQUIRED)
+# BLAS is called from inside the OpenMP threads of the algorithms: a sequential BLAS is
+# needed. Without BLA_VENDOR, FindBLAS may pick the threaded MKL (libmkl_intel_thread +
+# Intel OpenMP runtime), which crashes with the GNU OpenMP runtime (dgeqrf of the Chebyshev
+# precomputation). Default order: OpenBLAS, sequential MKL, any BLAS.
+if(NOT BLA_VENDOR)
+  foreach(vendor OpenBLAS Intel10_64lp_seq All)
+    set(BLA_VENDOR ${vendor})
+    find_package(BLAS QUIET)
+    if(BLAS_FOUND)
+      break()
+    endif()
+  endforeach()
+endif()
+message(STATUS "BLA_VENDOR = ${BLA_VENDOR}")
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
