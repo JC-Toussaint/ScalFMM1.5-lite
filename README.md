@@ -23,10 +23,29 @@ Modifications par rapport à l'original (performances du noyau Chebyshev, résul
   un seul thread, BLAS étant appelé depuis les threads OpenMP de l'algorithme (sans cela, M2L à
   l'ordre 8 est jusqu'à 10 fois plus lent).
 
-Supprimés : MPI, StarPU, CUDA/OpenCL, GroupTree, périodicité, FFT et noyaux
-Uniform/Taylor/Spherical, lecteurs de fichiers, Addons, documentation, tests unitaires.
-Les autres sources conservées sont identiques à l'original (patch `memcpy` de
-`FBasicParticleContainer.hpp` inclus).
+Bibliothèque standard (C++17) à la place des équivalents maison, résultats identiques au bit près :
+
+| Avant | Maintenant |
+|---|---|
+| `FVector` | `std::vector` (`FVector.hpp` n'est plus qu'un alias, pour le code existant) |
+| `FSmartPointer` | `std::shared_ptr` (données précalculées partagées par les copies des noyaux) |
+| `FNoCopyable` | constructeur de copie et affectation `= delete` |
+| `FMemUtils` | `std::copy_n`, `std::transform` |
+| `FAlignedMemory` | `operator new(taille, std::align_val_t)` |
+| `FBasicBlockAllocator` / `FListBlockAllocator` | `new` / `delete` (plus de paramètre d'allocateur pour `FOctree`) |
+| `FEnv` | `std::getenv` (`SCALFMM_ALGO_NUM_THREADS`) |
+| `FTic` | réduit à `std::chrono` |
+| `FMath::Sin`, `Cos`, `Sqrt`, `Max`, `Min`... | `std::sin`, `std::cos`, `std::sqrt`, `std::max`, `std::min`... |
+
+Conservés faute d'équivalent standard : l'abstraction SIMD de `FMath` (P2P vectorisé SSE/AVX),
+`FMath::pow(x, n)` à exposant entier (n multiplications ; `std::pow` arrondit autrement),
+`FComplex` (sans `-ffast-math`, la multiplication de `std::complex` appelle `__muldc3` pour
+traiter les infinis et NaN : nettement plus lente dans le noyau Rotation), `FPoint` (déjà fondé
+sur `std::array`), `FAssert`.
+
+Supprimés : MPI (dont la sérialisation des cellules et conteneurs), StarPU, CUDA/OpenCL,
+GroupTree, périodicité, FFT et noyaux Uniform/Taylor/Spherical, lecteurs de fichiers, Addons,
+journal de débogage (`FLog`) et statistiques mémoire (`FMemStats`), documentation, tests unitaires.
 
 ## Dépendances
 
