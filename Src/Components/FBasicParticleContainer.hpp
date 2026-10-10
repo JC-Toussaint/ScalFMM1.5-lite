@@ -115,7 +115,7 @@ protected:
         if( nbParticles+(sizeInput-1) >= allocatedParticles ){
             // allocate memory
             const FSize moduloParticlesNumber = (MemoryAlignement/sizeof(FReal));
-            allocatedParticles = (FMath::Max(DefaultNbParticles,FSize(FReal(nbParticles+sizeInput)*1.5)) + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
+            allocatedParticles = (std::max(DefaultNbParticles,FSize(FReal(nbParticles+sizeInput)*1.5)) + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
             // init with 0
             const size_t allocatedBytes = (sizeof(FReal)*3 + sizeof(AttributeClass)*NbAttributesPerParticle)*allocatedParticles;
             FReal* newData  = allocateBytes(allocatedBytes);

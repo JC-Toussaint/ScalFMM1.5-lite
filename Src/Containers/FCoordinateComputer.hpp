@@ -17,7 +17,7 @@ struct FCoordinateComputer {
                           const FReal boxWidthAtLeafLevel, const int treeHeight) {
         FAssertLF( (inRelativePosition >= 0 && inRelativePosition <= boxWidth), "inRelativePosition : ",inRelativePosition, " boxWidth ", boxWidth );
         if(inRelativePosition == boxWidth){
-            return FMath::pow2(treeHeight-1)-1;
+            return (1 << (treeHeight-1))-1;
         }
         const FReal indexFReal = inRelativePosition / boxWidthAtLeafLevel;
         return static_cast<int>(indexFReal);

@@ -2,6 +2,7 @@
 
 #ifndef FSPHERICAL_HPP
 #define FSPHERICAL_HPP
+#include <cmath>
 #include <iostream>
 
 #include "FGlobal.hpp"
@@ -53,13 +54,13 @@ public:
     /** From now, we just need a constructor based on a 3D position */
     explicit FSpherical(const FPoint<FReal>& inVector){
         const FReal x2y2 = (inVector.getX() * inVector.getX()) + (inVector.getY() * inVector.getY());
-        this->r          = FMath::Sqrt( x2y2 + (inVector.getZ() * inVector.getZ()));
+        this->r          = std::sqrt( x2y2 + (inVector.getZ() * inVector.getZ()));
 
         this->phi        = FMath::Atan2(inVector.getY(),inVector.getX());
 
         this->cosTheta = inVector.getZ() / r;
-        this->sinTheta = FMath::Sqrt(x2y2) / r;
-        this->theta    = FMath::ACos(this->cosTheta);
+        this->sinTheta = std::sqrt(x2y2) / r;
+        this->theta    = std::acos(this->cosTheta);
         // if r == 0 we cannot divide!
     }
 

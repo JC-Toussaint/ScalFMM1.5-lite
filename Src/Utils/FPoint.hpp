@@ -3,6 +3,7 @@
 #ifndef FPOINT_HPP
 #define FPOINT_HPP
 
+#include <cmath>
 #include <array>
 #include <iterator>
 #include <ostream>
@@ -213,7 +214,7 @@ public:
      * \return the norm of the FPoint
      */
     FReal norm() const {
-        return FMath::Sqrt(norm2()) ;
+        return std::sqrt(norm2()) ;
     }
 
     /** \brief Compute the distance to the origin

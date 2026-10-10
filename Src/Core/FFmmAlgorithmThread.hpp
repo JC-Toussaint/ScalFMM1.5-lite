@@ -3,6 +3,8 @@
 #define FFMMALGORITHMTHREAD_HPP
 
 
+#include <algorithm>
+#include <cmath>
 #include "../Utils/FAssert.hpp"
 
 #include "../Utils/FTic.hpp"
@@ -94,9 +96,9 @@ public:
     template <class NumType>
     NumType getChunkSize(const NumType inSize) const {
         if(userChunkSize <= -1){
-            return FMath::Max(NumType(1) , NumType(double(inSize)/double(omp_get_max_threads())) );
+            return std::max(NumType(1) , NumType(double(inSize)/double(omp_get_max_threads())) );
         } else if(userChunkSize == 0){
-            return FMath::Max(NumType(1) , inSize/NumType(omp_get_max_threads()*omp_get_max_threads()));
+            return std::max(NumType(1) , inSize/NumType(omp_get_max_threads()*omp_get_max_threads()));
         } else {
             return userChunkSize;
         }
@@ -205,7 +207,7 @@ protected:
         typename OctreeClass::Iterator avoidGotoLeftIterator(octreeIterator);
 
         // for each levels
-        for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
+        for(int idxLevel = std::min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
             int numberOfCells = 0;
             // for each cells
             do{
@@ -371,8 +373,8 @@ protected:
         {
 
             const float step = float(this->leafsNumber) / float(omp_get_num_threads());
-            const int start = int(FMath::Ceil(step * float(omp_get_thread_num())));
-            const int tempEnd = int(FMath::Ceil(step * float(omp_get_thread_num()+1)));
+            const int start = int(std::ceil(step * float(omp_get_thread_num())));
+            const int tempEnd = int(std::ceil(step * float(omp_get_thread_num()+1)));
             const int end = (tempEnd > this->leafsNumber ? this->leafsNumber : tempEnd);
 
             typename OctreeClass::Iterator octreeIterator(tree);

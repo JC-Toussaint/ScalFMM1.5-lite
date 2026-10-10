@@ -16,6 +16,7 @@
 #define FCOMPLEXE_HPP
 
 
+#include <cmath>
 #include "FMath.hpp"
 
 /**
@@ -119,7 +120,7 @@ public:
      *  return the modulus of the complex number
      */
     FReal norm() const{
-    		return FMath::Sqrt(this->norm2() );
+    		return std::sqrt(this->norm2() );
     }
     /**
      * Operator +=
@@ -201,7 +202,7 @@ public:
 
     /** Test if a complex is not a number */
     bool isNan() const {
-        return FMath::IsNan(complex[1]) || FMath::IsNan(complex[0]);
+        return std::isnan(complex[1]) || std::isnan(complex[0]);
     }
 
     /** Mul other and another and add the result to current complexe */

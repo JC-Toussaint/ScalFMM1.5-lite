@@ -3,6 +3,7 @@
 #define FFMMALGORITHMTHREADTSM_HPP
 
 
+#include <algorithm>
 #include "../Utils/FAssert.hpp"
 
 #include "../Utils/FTic.hpp"
@@ -120,7 +121,7 @@ protected:
             ++numberOfLeafs;
         } while(octreeIterator.moveRight());
 
-        const int chunkSize = FMath::Max(1 , numberOfLeafs/(omp_get_max_threads()*omp_get_max_threads()));
+        const int chunkSize = std::max(1 , numberOfLeafs/(omp_get_max_threads()*omp_get_max_threads()));
 
         #pragma omp parallel num_threads(MaxThreads)
         {
@@ -158,7 +159,7 @@ protected:
         typename OctreeClass::Iterator avoidGotoLeftIterator(octreeIterator);
 
         // for each levels
-        for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
+        for(int idxLevel = std::min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
             int numberOfCells = 0;
             // for each cells
             do{
@@ -168,7 +169,7 @@ protected:
             avoidGotoLeftIterator.moveUp();
             octreeIterator = avoidGotoLeftIterator;// equal octreeIterator.moveUp(); octreeIterator.gotoLeft();
 
-            const int chunkSize = FMath::Max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
+            const int chunkSize = std::max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
 
             #pragma omp parallel num_threads(MaxThreads)
             {
@@ -229,7 +230,7 @@ protected:
                 avoidGotoLeftIterator.moveDown();
                 octreeIterator = avoidGotoLeftIterator;
 
-                const int chunkSize = FMath::Max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
+                const int chunkSize = std::max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
 
                 #pragma omp parallel num_threads(MaxThreads)
                 {
@@ -287,7 +288,7 @@ protected:
                 avoidGotoLeftIterator.moveDown();
                 octreeIterator = avoidGotoLeftIterator;
 
-                const int chunkSize = FMath::Max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
+                const int chunkSize = std::max(1 , numberOfCells/(omp_get_max_threads()*omp_get_max_threads()));
 
                 #pragma omp parallel num_threads(MaxThreads)
                 {
@@ -328,7 +329,7 @@ protected:
             } while(octreeIterator.moveRight());
         }
 
-        const int chunkSize = FMath::Max(1 , numberOfLeafs/(omp_get_max_threads()*omp_get_max_threads()));
+        const int chunkSize = std::max(1 , numberOfLeafs/(omp_get_max_threads()*omp_get_max_threads()));
 
         const int heightMinusOne = OctreeHeight - 1;
         #pragma omp parallel num_threads(MaxThreads)

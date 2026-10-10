@@ -211,7 +211,7 @@ public:
         const FTreeCoordinate parentCell(this->getX()>>1,this->getY()>>1,this->getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int limite = FMath::pow2(inLevel-1);
+        const int limite = (1 << (inLevel-1));
 
         int idxNeighbors = 0;
         // We test all cells around

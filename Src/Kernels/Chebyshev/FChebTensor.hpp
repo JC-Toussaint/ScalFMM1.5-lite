@@ -2,6 +2,7 @@
 #ifndef FCHEBTENSOR_HPP
 #define FCHEBTENSOR_HPP
 
+#include <cmath>
 #include "../../Utils/FMath.hpp"
 
 #include "./FChebRoots.hpp"
@@ -45,12 +46,12 @@ public:
         // weights in 1d
         FReal weights_1d[ORDER];
         for (unsigned int o=0; o<ORDER; ++o)
-            weights_1d[o] = FMath::FPi<FReal>()/ORDER * FMath::Sqrt(FReal(1.)-FReal(BasisType::roots[o])*FReal(BasisType::roots[o]));
+            weights_1d[o] = FMath::FPi<FReal>()/ORDER * std::sqrt(FReal(1.)-FReal(BasisType::roots[o])*FReal(BasisType::roots[o]));
         // weights in 3d (tensor structure)
         unsigned int node_ids[nnodes][3];
         ParentTensor::setNodeIds(node_ids);
         for (unsigned int n=0; n<nnodes; ++n) {
-            weights[n] = FMath::Sqrt(weights_1d[node_ids[n][0]]*weights_1d[node_ids[n][1]]*weights_1d[node_ids[n][2]]);
+            weights[n] = std::sqrt(weights_1d[node_ids[n][0]]*weights_1d[node_ids[n][1]]*weights_1d[node_ids[n][2]]);
         }
     }
 

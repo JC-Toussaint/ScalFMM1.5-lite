@@ -3,6 +3,7 @@
 #define FFMMALGORITHM_HPP
 
 
+#include <algorithm>
 #include "../Utils/FGlobal.hpp"
 #include "../Utils/FAssert.hpp"
 
@@ -121,7 +122,7 @@ protected:
         typename OctreeClass::Iterator avoidGotoLeftIterator(octreeIterator);
 
         // for each levels
-        for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
+        for(int idxLevel = std::min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
 
             // for each cells
             do{

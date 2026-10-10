@@ -773,7 +773,7 @@ public:
         FTreeCoordinate center;
         center.setPositionFromMorton(inIndex);
 
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         int idxNeighbors = 0;
 
@@ -859,7 +859,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         int idxNeighbors = 0;
         // We test all cells around
@@ -921,7 +921,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         int idxNeighbors = 0;
         // We test all cells around
@@ -989,7 +989,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         int idxNeighbors = 0;
         // We test all cells around
@@ -1049,7 +1049,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         int idxNeighbors = 0;
         // We test all cells around
@@ -1108,7 +1108,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         // This is not on a border we can use normal interaction list method
         if( !(parentCell.getX() == 0 || parentCell.getY() == 0 || parentCell.getZ() == 0 ||
@@ -1209,7 +1209,7 @@ public:
         const FTreeCoordinate parentCell(workingCell.getX()>>1,workingCell.getY()>>1,workingCell.getZ()>>1);
 
         // Limite at parent level number of box (split by 2 by level)
-        const int boxLimite = FMath::pow2(inLevel-1);
+        const int boxLimite = (1 << (inLevel-1));
 
         // This is not on a border we can use normal interaction list method
         if( !(parentCell.getX() == 0 || parentCell.getY() == 0 || parentCell.getZ() == 0 ||
@@ -1323,7 +1323,7 @@ public:
      */
     int getLeafsNeighbors(ContainerClass* inNeighbors[27], const FTreeCoordinate& center, const int inLevel){
         memset( inNeighbors, 0 , 27 * sizeof(ContainerClass*));
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         int idxNeighbors = 0;
 
@@ -1363,7 +1363,7 @@ public:
      * @return the number of neighbors
      */
     int getLeafsNeighbors(ContainerClass* inNeighbors[26], int inNeighborPositions[26], const FTreeCoordinate& center, const int inLevel){
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         int idxNeighbors = 0;
 
@@ -1406,7 +1406,7 @@ public:
      */
     int getLeafsNeighbors(const CellClass*  inNeighbors[27], const FTreeCoordinate& center, const int inLevel){
         memset( inNeighbors, 0 , 27 * sizeof(CellClass*));
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         int idxNeighbors = 0;
 
@@ -1447,7 +1447,7 @@ public:
      * @return the number of neighbors
      */
     int getLeafsNeighbors(const CellClass*  inNeighbors[26], int inNeighborPositions[26], const FTreeCoordinate& center, const int inLevel){
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         int idxNeighbors = 0;
 
@@ -1492,7 +1492,7 @@ public:
     int getPeriodicLeafsNeighbors(ContainerClass* inNeighbors[27], FTreeCoordinate outOffsets[27], bool*const isPeriodic,
                 const FTreeCoordinate& center, const int inLevel, const int inDirection){
 
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         if( center.getX() != 0 && center.getY() != 0 && center.getZ() != 0 &&
                 center.getX() != boxLimite - 1 && center.getY() != boxLimite - 1 && center.getZ() != boxLimite - 1 ){
@@ -1582,7 +1582,7 @@ public:
     int getPeriodicLeafsNeighbors(ContainerClass* inNeighbors[26], int inNeighborPositions[26], FTreeCoordinate outOffsets[26], bool*const isPeriodic,
     const FTreeCoordinate& center, const int inLevel, const int inDirection){
 
-        const int boxLimite = FMath::pow2(inLevel);
+        const int boxLimite = (1 << (inLevel));
 
         if( center.getX() != 0 && center.getY() != 0 && center.getZ() != 0 &&
                 center.getX() != boxLimite - 1 && center.getY() != boxLimite - 1 && center.getZ() != boxLimite - 1 ){

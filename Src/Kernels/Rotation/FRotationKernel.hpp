@@ -2,6 +2,7 @@
 #ifndef FROTATIONKERNEL_HPP
 #define FROTATIONKERNEL_HPP
 
+#include <cmath>
 #include "Components/FAbstractKernels.hpp"
 #include <memory>
 #include "Utils/FComplex.hpp"
@@ -114,7 +115,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
             // we go from the root to the leaf-1
             for( int idxLevel = 0 ; idxLevel < treeHeight - 1 ; ++idxLevel){
                 // b is the parent-child distance = norm( vec(widthAtLevel,widthAtLevel,widthAtLevel))
-                const FReal b = FMath::Sqrt(widthAtLevel*widthAtLevel*3);
+                const FReal b = std::sqrt(widthAtLevel*widthAtLevel*3);
                 // we compute b^idx iteratively
                 FReal bPowIdx = 1.0;
                 // we compute -1^idx iteratively
@@ -152,7 +153,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                                 // this is the position in the index system from 0 to 343
                                 const int position = ((( (idxX+3) * 7) + (idxY+3))) * 7 + idxZ + 3;
                                 // b is the distance between the two cells
-                                const FReal b = FMath::Sqrt( (relativePosition.getX() * relativePosition.getX()) +
+                                const FReal b = std::sqrt( (relativePosition.getX() * relativePosition.getX()) +
                                                              (relativePosition.getY() * relativePosition.getY()) +
                                                              (relativePosition.getZ() * relativePosition.getZ()));
                                 // compute b^idx+1 iteratively
@@ -249,7 +250,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
         FReal sqrtDoubleFactorials[P+1][P+1];
         for(int l = 0 ; l <= P ; ++l ){
             for(int m = 0 ; m <= l ; ++m ){
-                sqrtDoubleFactorials[l][m] = FMath::Sqrt(factorials[l-m]*factorials[l+m]);
+                sqrtDoubleFactorials[l][m] = std::sqrt(factorials[l-m]*factorials[l+m]);
             }
         }
 
@@ -309,9 +310,9 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                 for(int m = 0 ; m <= P ; ++m, ++index_lm ){
                     const FReal mphi = (sph.getPhiZero2Pi() + FMath::FPiDiv2<FReal>()) * FReal(m);
                     // O_{l,m}( \alpha, \beta + \phi ) = e^{-i \phi m} O_{l,m}( \alpha, \beta )
-                    rotationExpMinusImPhi[idxChild][index_lm].setRealImag(FMath::Cos(-mphi), FMath::Sin(-mphi));
+                    rotationExpMinusImPhi[idxChild][index_lm].setRealImag(std::cos(-mphi), std::sin(-mphi));
                     // M_{l,m}( \alpha, \beta + \phi ) = e^{i \phi m} M_{l,m}( \alpha, \beta )
-                    rotationExpImPhi[idxChild][index_lm].setRealImag(FMath::Cos(mphi), FMath::Sin(mphi));
+                    rotationExpImPhi[idxChild][index_lm].setRealImag(std::cos(mphi), std::sin(mphi));
                 }
             }
             // Then for l < P it just a copy of the previous computed vector
@@ -404,9 +405,9 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                             for(int m = 0 ; m <= P ; ++m, ++index_lm ){
                                 const FReal mphi = (sph.getPhiZero2Pi() + FMath::FPiDiv2<FReal>()) * FReal(m);
                                 // O_{l,m}( \alpha, \beta + \phi ) = e^{-i \phi m} O_{l,m}( \alpha, \beta )
-                                rotationM2LExpMinusImPhi[position][index_lm].setRealImag(FMath::Cos(-mphi), FMath::Sin(-mphi));
+                                rotationM2LExpMinusImPhi[position][index_lm].setRealImag(std::cos(-mphi), std::sin(-mphi));
                                 // M_{l,m}( \alpha, \beta + \phi ) = e^{i \phi m} M_{l,m}( \alpha, \beta )
-                                rotationM2LExpImPhi[position][index_lm].setRealImag(FMath::Cos(mphi), FMath::Sin(mphi));
+                                rotationM2LExpImPhi[position][index_lm].setRealImag(std::cos(mphi), std::sin(mphi));
                             }
                         }
                         // Then for l < P copy the subpart of the previous vector
@@ -438,8 +439,8 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                             }
                             // else we take the right indexes
                             else {
-                                dx = FMath::Max(FMath::Abs(idxX),FMath::Abs(idxY));
-                                dy = FMath::Min(FMath::Abs(idxX),FMath::Abs(idxY));
+                                dx = std::max(FMath::Abs(idxX),FMath::Abs(idxY));
+                                dy = std::min(FMath::Abs(idxX),FMath::Abs(idxY));
                                 dz = -idxZ;
                             }
 
@@ -638,8 +639,8 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
         const FReal F1 = FReal(1.0);
         const FReal F2 = FReal(2.0);
 
-        const FReal cosTheta = FMath::Cos(inTheta);
-        const FReal sinTheta = FMath::Sin(inTheta);
+        const FReal cosTheta = std::cos(inTheta);
+        const FReal sinTheta = std::sin(inTheta);
 
         // First compute g
         FReal g[SizeArray];
@@ -652,7 +653,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                 int index_l0 = 1;
                 FReal fl = F1;
                 for(int l = 1; l <= P ; ++l, ++fl ){
-                    g[index_l0] = FMath::Sqrt((fl*F2-F1)/(fl*F2)) * g[index_l0-l];
+                    g[index_l0] = std::sqrt((fl*F2-F1)/(fl*F2)) * g[index_l0-l];
                     index_l0 += l + 1;
                 }
             }
@@ -663,7 +664,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                 for(int l = 1; l <= P ; ++l, ++fl ){
                     FReal fm = F1;
                     for(int m = 1; m <= l ; ++m, ++index_lm, ++fm ){
-                        g[index_lm] = FMath::Sqrt((fl-fm+F1)/(fl+fm)) * g[index_lm-1];
+                        g[index_lm] = std::sqrt((fl-fm+F1)/(fl+fm)) * g[index_lm-1];
                     }
                     ++index_lm;
                 }
@@ -702,14 +703,14 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                     FReal fm = F0;
                     for(int m = 0 ; m < l ; ++m, ++fm){
                         dlmk[l][P+m][P+k-1] =
-                                (FMath::Sqrt((fl*(fl+F1)-fm*(fm+F1))/(fl*(fl+F1)-fk*(fk-F1))) * dlmk[l][P+m+1][P+k])
-                                + ((fm+fk)*sinTheta*dlmk[l][P+m][P+k]/(FMath::Sqrt(fl*(fl+F1)-fk*(fk-F1))*(F1+cosTheta)));
+                                (std::sqrt((fl*(fl+F1)-fm*(fm+F1))/(fl*(fl+F1)-fk*(fk-F1))) * dlmk[l][P+m+1][P+k])
+                                + ((fm+fk)*sinTheta*dlmk[l][P+m][P+k]/(std::sqrt(fl*(fl+F1)-fk*(fk-F1))*(F1+cosTheta)));
                     }
                     // Equ 26
                     // For l > 0, -l < k <= l, cos(theta) >= 0
                     // d{l,l,k-1} = (l+k) sin(theta) d{l,l,k}
                     //             / sqrt(l(l+1)-k(k-1)) (1+cos(theta))
-                    dlmk[l][P+l][P+k-1] = (fl+fk)*sinTheta*dlmk[l][P+l][P+k]/(FMath::Sqrt(fl*(fl+F1)-fk*(fk-F1))*(F1+cosTheta));
+                    dlmk[l][P+l][P+k-1] = (fl+fk)*sinTheta*dlmk[l][P+l][P+k]/(std::sqrt(fl*(fl+F1)-fk*(fk-F1))*(F1+cosTheta));
                 }
                 // Equ 27
                 // d{l,m,k} = -1^(m+k) d{l,-m,-k}  , For l > 0, -l <= m < 0, -l <= k <= l
@@ -926,8 +927,8 @@ public:
                 { // We need to compute the angles to use in the "m" loop
                     // So we can compute only the one needed after "l" inc
                     const FReal angle = fl * sph.getPhi() + i_pow_m[l & 0x3];
-                    angles[l][0] = FMath::Cos(angle);
-                    angles[l][1] = FMath::Sin(angle);
+                    angles[l][0] = std::cos(angle);
+                    angles[l][1] = std::sin(angle);
                 }
                 for(int m = 0 ; m <= l ; ++m, ++index_l_m){
                     const FReal magnitude = q_aPowL * legendre[index_l_m] / factorials[l+m];
@@ -1223,8 +1224,8 @@ public:
             {
                 for(int m = 0 ; m <= P ; ++m){
                     const FReal m_phi_i_pow_m = FReal(m) * sph.getPhi() + i_pow_m[m & 0x3];
-                    cos_m_phi_i_pow_m[m] = FMath::Cos(m_phi_i_pow_m);
-                    sin_m_phi_i_pow_m[m] = FMath::Sin(m_phi_i_pow_m);
+                    cos_m_phi_i_pow_m[m] = std::cos(m_phi_i_pow_m);
+                    sin_m_phi_i_pow_m[m] = std::sin(m_phi_i_pow_m);
                 }
             }
 
@@ -1278,8 +1279,8 @@ public:
                 Fp /= sph.getR() * sph.getSinTheta();
 
                 // copy variable from spherical position
-                const FReal cosPhi     = FMath::Cos(sph.getPhi());
-                const FReal sinPhi     = FMath::Sin(sph.getPhi());
+                const FReal cosPhi     = std::cos(sph.getPhi());
+                const FReal sinPhi     = std::sin(sph.getPhi());
                 const FReal physicalValue = physicalValues[idxPart];
 
                 // compute forces

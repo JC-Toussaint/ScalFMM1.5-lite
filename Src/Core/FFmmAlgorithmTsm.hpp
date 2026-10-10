@@ -3,6 +3,7 @@
 #define FFMMALGORITHMTSM_HPP
 
 
+#include <algorithm>
 #include "../Utils/FAssert.hpp"
 
 #include "../Utils/FTic.hpp"
@@ -111,7 +112,7 @@ protected:
         typename OctreeClass::Iterator avoidGotoLeftIterator(octreeIterator);
 
         // for each levels
-        for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
+        for(int idxLevel = std::min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
             // for each cells
             do{
                 // We need the current cell and the child
