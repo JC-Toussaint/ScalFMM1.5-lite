@@ -39,9 +39,9 @@ Bibliothèque standard (C++17) à la place des équivalents maison, résultats i
 
 Conservés faute d'équivalent standard : l'abstraction SIMD de `FMath` (P2P vectorisé SSE/AVX),
 `FMath::pow(x, n)` à exposant entier (n multiplications ; `std::pow` arrondit autrement),
-`FComplex` (sans `-ffast-math`, la multiplication de `std::complex` appelle `__muldc3` pour
-traiter les infinis et NaN : nettement plus lente dans le noyau Rotation), `FPoint` (déjà fondé
-sur `std::array`), `FAssert`.
+`FComplex` (sans `-ffast-math`, la multiplication de `std::complex` ajoute un test NaN et un
+éventuel appel à `__muldc3` : remplacement non fait, il faudrait en mesurer le coût dans le noyau
+Rotation), `FPoint` (déjà fondé sur `std::array`), `FAssert`.
 
 Supprimés : MPI (dont la sérialisation des cellules et conteneurs), StarPU, CUDA/OpenCL,
 GroupTree, périodicité, FFT et noyaux Uniform/Taylor/Spherical, lecteurs de fichiers, Addons,
