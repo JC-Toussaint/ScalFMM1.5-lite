@@ -75,17 +75,16 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Src/ScalFmmConfig.h.cmake
 #===========================================================================
 # Library
 #===========================================================================
-add_library(scalfmm STATIC
-  Src/Utils/FAlgorithmTimers.cpp)
-set_target_properties(scalfmm PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
-target_compile_features(scalfmm PUBLIC cxx_std_17)
-target_compile_options(scalfmm PUBLIC ${SCALFMM_CXX_FLAGS})
-target_include_directories(scalfmm PUBLIC
+# header-only: an INTERFACE target carrying the include directories, the compile options
+# and the dependencies (OpenMP, BLAS, LAPACK) of the code using the library
+add_library(scalfmm INTERFACE)
+target_compile_features(scalfmm INTERFACE cxx_std_17)
+target_compile_options(scalfmm INTERFACE ${SCALFMM_CXX_FLAGS})
+target_include_directories(scalfmm INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Src>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/Src>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(scalfmm PUBLIC OpenMP::OpenMP_CXX ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(scalfmm INTERFACE OpenMP::OpenMP_CXX ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 #===========================================================================
 # Tests
@@ -100,9 +99,10 @@ if(SCALFMM_BUILD_TESTS)
 endif()
 
 #===========================================================================
-# Install (same layout as ScalFMM 1.5: <prefix>/include/<dir>, <prefix>/lib)
+# Install: headers in <prefix>/include/<dir> (same layout as ScalFMM 1.5), CMake target in
+# <prefix>/lib/cmake/ScalFMM
 #===========================================================================
-install(TARGETS scalfmm EXPORT ScalFMMTargets ARCHIVE DESTINATION lib)
+install(TARGETS scalfmm EXPORT ScalFMMTargets)
 install(DIRECTORY Src/ DESTINATION include FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Src/ScalFmmConfig.h DESTINATION include)
 install(EXPORT ScalFMMTargets NAMESPACE scalfmm:: DESTINATION lib/cmake/ScalFMM)

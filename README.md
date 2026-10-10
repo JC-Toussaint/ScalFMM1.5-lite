@@ -54,7 +54,8 @@ voisins inutilisées, `FTreeCoordinate` autonome (ne dérive plus de `FPoint`).
 Supprimés : MPI (dont la sérialisation des cellules et conteneurs), forces (P2P multi-seconds
 membres et tensoriel, L2P du gradient), StarPU, CUDA/OpenCL,
 GroupTree, périodicité, FFT et noyaux Uniform/Taylor/Spherical, lecteurs de fichiers, Addons,
-journal de débogage (`FLog`) et statistiques mémoire (`FMemStats`), documentation, tests unitaires.
+journal de débogage (`FLog`) et statistiques mémoire (`FMemStats`), documentation, tests unitaires,
+bibliothèque compilée `libscalfmm.a` (en-têtes seuls).
 
 ## Dépendances
 
@@ -67,14 +68,19 @@ son runtime OpenMP (Intel) est incompatible avec celui de GCC (plantage dans `dg
 
 ## Compilation et installation
 
+La bibliothèque est faite uniquement d'en-têtes : rien à compiler, `make` ne construit que les
+tests. CMake génère `ScalFmmConfig.h` (options ci-dessous).
+
     mkdir Build && cd Build
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local      # ou $HOME/local, sans sudo
     make
     ctest              # validation Rotation et Chebyshev contre le calcul direct
     sudo make install
 
-Installe `include/<Core|Containers|Components|Kernels|Utils|Extensions>/...`,
-`include/ScalFmmConfig.h` et `lib/libscalfmm.a` (même disposition que ScalFMM 1.5).
+Installe `include/<Core|Containers|Components|Kernels|Utils|Extensions>/...` et
+`include/ScalFmmConfig.h` (même disposition que ScalFMM 1.5), ainsi que la cible CMake
+`scalfmm::scalfmm` (`lib/cmake/ScalFMM`). Il suffit au code utilisateur de mettre
+`<prefix>/include` dans ses chemins d'inclusion et de lier OpenMP, BLAS et LAPACK.
 
 Options : `SCALFMM_USE_AVX` (ON), `SCALFMM_USE_SSE` (OFF), `SCALFMM_USE_NATIVE`
 (`-march=native`, ON), `SCALFMM_USE_ASSERT` (ON),
