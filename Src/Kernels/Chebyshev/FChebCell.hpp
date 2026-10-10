@@ -18,7 +18,7 @@
  * @param NVALS is the number of right hand side.
  */
 template <class FReal, int ORDER, int NRHS = 1, int NLHS = 1, int NVALS = 1>
-class FChebCell : public FBasicCell, public FAbstractSendable
+class FChebCell : public FBasicCell
 {
     // nnodes = ORDER^3
     // we multiply by 2 because we store the  Multipole expansion end the compressed one.
@@ -64,54 +64,6 @@ public:
         memset(local_exp,         0, sizeof(FReal) * NLHS * NVALS * VectorSize);
     }
 
-    ///////////////////////////////////////////////////////
-    // to extend FAbstractSendable
-    ///////////////////////////////////////////////////////
-    template <class BufferWriterClass>
-    void serializeUp(BufferWriterClass& buffer) const{
-        buffer.write(multipole_exp, VectorSize*NVALS*NRHS);
-    }
-    template <class BufferReaderClass>
-    void deserializeUp(BufferReaderClass& buffer){
-        buffer.fillArray(multipole_exp, VectorSize*NVALS*NRHS);
-    }
-
-    template <class BufferWriterClass>
-    void serializeDown(BufferWriterClass& buffer) const{
-        buffer.write(local_exp, VectorSize*NVALS*NLHS);
-    }
-    template <class BufferReaderClass>
-    void deserializeDown(BufferReaderClass& buffer){
-        buffer.fillArray(local_exp, VectorSize*NVALS*NLHS);
-    }
-
-    ///////////////////////////////////////////////////////
-    // to extend Serializable
-    ///////////////////////////////////////////////////////
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const{
-        FBasicCell::save(buffer);
-        buffer.write(multipole_exp, VectorSize*NVALS*NRHS);
-        buffer.write(local_exp, VectorSize*NVALS*NLHS);
-    }
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer){
-        FBasicCell::restore(buffer);
-        buffer.fillArray(multipole_exp, VectorSize*NVALS*NRHS);
-        buffer.fillArray(local_exp, VectorSize*NVALS*NLHS);
-    }
-
-    FSize getSavedSize() const {
-        return FSize(sizeof(FReal)) * VectorSize*(NRHS+NLHS)*NVALS + FBasicCell::getSavedSize();
-    }
-
-    FSize getSavedSizeUp() const {
-        return FSize(sizeof(FReal)) * VectorSize*(NRHS)*NVALS;
-    }
-
-    FSize getSavedSizeDown() const {
-        return FSize(sizeof(FReal)) * VectorSize*(NLHS)*NVALS;
-    }
 
     //	template <class StreamClass>
     //	const void print(StreamClass& output) const{
@@ -137,25 +89,11 @@ public:
 template <class FReal, int ORDER, int NRHS = 1, int NLHS = 1, int NVALS = 1>
 class FTypedChebCell : public FChebCell<FReal, ORDER,NRHS,NLHS,NVALS>, public FExtendCellType {
 public:
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const{
-        FChebCell<FReal,ORDER,NRHS,NLHS,NVALS>::save(buffer);
-        FExtendCellType::save(buffer);
-    }
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer){
-        FChebCell<FReal,ORDER,NRHS,NLHS,NVALS>::restore(buffer);
-        FExtendCellType::restore(buffer);
-    }
     void resetToInitialState(){
         FChebCell<FReal,ORDER,NRHS,NLHS,NVALS>::resetToInitialState();
         FExtendCellType::resetToInitialState();
     }
 
-
-    FSize getSavedSize() const {
-        return FExtendCellType::getSavedSize() + FChebCell<FReal, ORDER,NRHS,NLHS,NVALS>::getSavedSize();
-    }
 
 };
 #endif //FCHEBCELL_HPP

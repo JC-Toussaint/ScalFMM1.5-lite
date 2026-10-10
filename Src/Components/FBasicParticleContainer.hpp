@@ -7,7 +7,6 @@
 #include <new>
 
 #include "FAbstractParticleContainer.hpp"
-#include "FAbstractSerializable.hpp"
 
 #include "Utils/FGlobal.hpp"
 #include "Utils/FMath.hpp"
@@ -43,7 +42,7 @@
  * The memory is aligned to FP2PDefaultAlignement value.
  */
 template <class FReal, unsigned NbAttributesPerParticle, class AttributeClass >
-class FBasicParticleContainer : public FAbstractParticleContainer<FReal>, public FAbstractSerializable {
+class FBasicParticleContainer : public FAbstractParticleContainer<FReal> {
 protected:
     static const FSize MemoryAlignement   = FP2PDefaultAlignement;
     static const FSize DefaultNbParticles = FSize(MemoryAlignement/sizeof(FReal));
@@ -351,51 +350,6 @@ public:
     /////////////////////////////////////////////////////
     /////////////////////////////////////////////////////
 
-    /** The size to send a leaf */
-    FSize getSavedSize() const{
-        return FSize(sizeof(nbParticles) + nbParticles * (3 * sizeof(FReal) + NbAttributesPerParticle * sizeof(AttributeClass)));
-    }
-
-    /** Save the current cell in a buffer */
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const{
-        buffer << nbParticles;
-        for(int idx = 0 ; idx < 3 ; ++idx){
-            buffer.write(positions[idx], nbParticles);
-        }
-        for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-            buffer.write(attributes[idx], nbParticles);
-        }
-    }
-    /** Restore the current cell from a buffer */
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer){
-        buffer >> nbParticles;
-        if( nbParticles >= allocatedParticles ){
-            // allocate memory
-            const FSize moduloParticlesNumber = (MemoryAlignement/sizeof(FReal));
-            allocatedParticles = (nbParticles + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
-            // init with 0
-            const size_t allocatedBytes = (sizeof(FReal)*3 + sizeof(AttributeClass)*NbAttributesPerParticle)*allocatedParticles;
-            FReal* newData  = allocateBytes(allocatedBytes);
-            memset( newData, 0, allocatedBytes);
-
-            deallocateBytes(positions[0]);
-            for(int idx = 0 ; idx < 3 ; ++idx){
-                positions[idx] = newData + (allocatedParticles * idx);
-            }
-            AttributeClass* startAddress = reinterpret_cast<AttributeClass*>(positions[2] + allocatedParticles);
-            for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-                attributes[idx] = startAddress + (idx * allocatedParticles);
-            }
-        }
-        for(int idx = 0 ; idx < 3 ; ++idx){
-            buffer.fillArray(positions[idx], nbParticles);
-        }
-        for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-            buffer.fillArray(attributes[idx], nbParticles);
-        }
-    }
 
     /** Reset the attributes to zeros */
     void resetToInitialState(){

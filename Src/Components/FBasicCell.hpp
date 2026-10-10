@@ -4,8 +4,6 @@
 
 #include "../Utils/FGlobal.hpp"
 #include "../Containers/FTreeCoordinate.hpp"
-#include "FAbstractSerializable.hpp"
-#include "FAbstractSendable.hpp"
 
 
 /**
@@ -20,7 +18,7 @@
 *
 *
 */
-class FBasicCell : public FAbstractSerializable {
+class FBasicCell {
     MortonIndex mortonIndex;    ///< Morton index (need by most elements)
     FTreeCoordinate coordinate; ///< The position
     std::size_t level;          ///< Level in tree
@@ -69,22 +67,6 @@ public:
         this->coordinate.setZ(inZ);
     }
 
-    /** Save the current cell in a buffer */
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const{
-        buffer << mortonIndex;
-        coordinate.save(buffer);
-    }
-    /** Restore the current cell from a buffer */
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer){
-        buffer >> mortonIndex;
-        coordinate.restore(buffer);
-    }
-
-    FSize getSavedSize() const {
-        return FSize(sizeof(mortonIndex)) +  coordinate.getSavedSize();
-    }
 
     /** Do nothing */
     void resetToInitialState(){

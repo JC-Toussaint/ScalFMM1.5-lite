@@ -8,7 +8,6 @@
 #include "../Utils/FPoint.hpp"
 #include "../Utils/FMath.hpp"
 
-#include "../Components/FAbstractSerializable.hpp"
 
 /**
  * @author Berenger Bramas (berenger.bramas@inria.fr)
@@ -20,7 +19,7 @@
  * It is directly related to morton index, as interleaves
  * bits from this coordinate make the morton index
  */
-class FTreeCoordinate : public FAbstractSerializable, public FPoint<int, 3> {
+class FTreeCoordinate : public FPoint<int, 3> {
 private:
   using point_t = FPoint<int, 3>;
     enum {Dim = point_t::Dim};
@@ -152,17 +151,6 @@ public:
             && point_t::data()[2] == inZ;
     }
 
-    /** Use base class save */
-    using point_t::save;
-    /** Use base class restore */
-    using point_t::restore;
-
-
-    /** To know the size when we save it */
-    FSize getSavedSize() const {
-        return FSize(3 * sizeof(point_t::data()[0]));
-    }
-
 
     static std::string MortonToBinary(MortonIndex index, int level){
         std::string str;
@@ -268,7 +256,6 @@ public:
     }
 
 };
-
 
 
 #endif //FTREECOORDINATE_HPP

@@ -55,27 +55,12 @@ public:
     }
 
 public:
-    /** Save current object */
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const {
-        buffer << containsTargets;
-        buffer << containsSources;
-    }
-    /** Retrieve current object */
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer) {
-        buffer >> containsTargets;
-        buffer >> containsSources;
-    }
     /** reset to unknown type */
     void resetToInitialState(){
         containsTargets = false;
         containsSources = false;
     }
 
-    FSize getSavedSize() const {
-        return FSize(sizeof(containsTargets) + sizeof(containsSources));
-    }
 };
 
 

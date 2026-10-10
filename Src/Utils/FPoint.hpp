@@ -407,21 +407,6 @@ public:
         return is;
     }
 
-    /** \brief Save current object */
-    template <class BufferWriterClass>
-    void save(BufferWriterClass& buffer) const {
-        for(std::size_t i = 0; i < Dim; ++i) {
-            buffer << this->data()[i];
-        }
-    }
-
-    /** \brief Retrieve current object */
-    template <class BufferReaderClass>
-    void restore(BufferReaderClass& buffer) {
-        for(std::size_t i = 0; i < Dim; ++i) {
-            buffer >> this->data()[i];
-        }
-    }
 
 };
 
