@@ -11,7 +11,11 @@ Version épurée de [ScalFMM](https://gitlab.inria.fr/solverstack/ScalFMM) 1.5
   - **Rotation** (harmoniques sphériques) : `Kernels/Rotation`,
   - **Chebyshev** (interpolation) : `Kernels/Chebyshev` (`FChebKernel`, `FChebSymKernel`,
     `FChebDenseKernel`) et `Kernels/Interpolation` ;
-- P2P direct : `Kernels/P2P`.
+- P2P direct : `Kernels/P2P` ;
+- **potentiel seul** (feeLLGood n'utilise pas les forces) : le conteneur de particules ne garde que
+  la charge et le potentiel (2 valeurs par particule au lieu de 5), P2P et L2P ne calculent plus
+  les forces. Les opérations du potentiel sont inchangées : potentiels identiques au bit près à
+  ceux de ScalFMM 1.5. Noyaux d'interpolation : matrice scalaire et un seul second membre.
 
 Modifications par rapport à l'original (performances du noyau Chebyshev, résultats inchangés) :
 
@@ -44,7 +48,11 @@ Conservés faute d'équivalent standard : l'abstraction SIMD de `FMath` (P2P vec
 `std::complex` est écrit explicitement (`FRotationKernel::mul`) : sans `-ffast-math`, l'opérateur
 `*=` de `std::complex` ajoute à chaque produit un test NaN et un appel possible à `__muldc3`.
 
-Supprimés : MPI (dont la sérialisation des cellules et conteneurs), StarPU, CUDA/OpenCL,
+Octree allégé (idées reprises du scalFMMlight de feeLLGood) : sans périodicité ni recherches de
+voisins inutilisées, `FTreeCoordinate` autonome (ne dérive plus de `FPoint`).
+
+Supprimés : MPI (dont la sérialisation des cellules et conteneurs), forces (P2P multi-seconds
+membres et tensoriel, L2P du gradient), StarPU, CUDA/OpenCL,
 GroupTree, périodicité, FFT et noyaux Uniform/Taylor/Spherical, lecteurs de fichiers, Addons,
 journal de débogage (`FLog`) et statistiques mémoire (`FMemStats`), documentation, tests unitaires.
 

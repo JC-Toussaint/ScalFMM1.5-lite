@@ -2,15 +2,12 @@
 #ifndef FCHEBINTERPOLATOR_HPP
 #define FCHEBINTERPOLATOR_HPP
 
-
 #include "../Interpolation/FInterpMapping.hpp"
 #include "../Interpolation/FInterpMatrixKernel.hpp" //PB
 #include "FChebTensor.hpp"
 #include "FChebRoots.hpp"
 
 #include "Utils/FBlas.hpp"
-
-
 
 /**
  * @author Matthias Messner (matthias.matthias@inria.fr)
@@ -59,7 +56,6 @@ protected: // PB for OptiDis
     const FReal RootCellWidth;
     // Cell width extension (only used by M2M/L2L, kernel handles extension for P2M/L2P)
     const FReal CellWidthExtension;
-
 
     // permutations (only needed in the tensor product interpolation case)
     unsigned int perm[3][nnodes];
@@ -255,8 +251,6 @@ protected: // PB for OptiDis
 
     ////////////////////////////////////////////////////////////////////
 
-
-
     /**
      * Initialize the child - parent - interpolator, it is basically the matrix
      * S which is precomputed and reused for all M2M and L2L operations, ie for
@@ -291,7 +285,6 @@ protected: // PB for OptiDis
         }
     }
 
-
     /**
    * Initialize the child - parent - interpolator, it is basically the matrix
    * S which is precomputed and reused for all M2M and L2L operations, ie for
@@ -325,7 +318,6 @@ protected: // PB for OptiDis
             assembleInterpolator(ORDER, ChildCoords[2], ChildParentInterpolator[TreeLevel][child] + 2 * ORDER*ORDER);
         }
 
-
         // init permutations
         for (unsigned int i=0; i<ORDER; ++i) {
             for (unsigned int j=0; j<ORDER; ++j) {
@@ -339,8 +331,6 @@ protected: // PB for OptiDis
         }
 
     }
-
-
 
 public:
     /**
@@ -368,7 +358,6 @@ public:
         for (unsigned int o=1; o<ORDER; ++o)
             for (unsigned int j=0; j<ORDER; ++j)
                 T[(o-1)*ORDER + j] = FReal(BasisType::T(o, FReal(BasisType::roots[j])));
-
 
         // initialize root node ids
         TensorType::setNodeIds(node_ids);
@@ -404,7 +393,6 @@ public:
         }
     }
 
-
     /**
      * Destructor: Delete dynamically allocated memory for M2M and L2L operator
      */
@@ -420,7 +408,6 @@ public:
         }
         delete[] ChildParentInterpolator;
     }
-
 
     /**
      * Assembles the interpolator \f$S_\ell\f$ of size \f$N\times
@@ -465,7 +452,6 @@ public:
 
     }
 
-
     void assembleInterpolator(const unsigned int M, const FReal *const x, FReal *const S) const
     {
         // values of chebyshev polynomials of source particle: T_o(x_i)
@@ -487,15 +473,8 @@ public:
 
     }
 
-
-
     const unsigned int * getPermutationsM2ML2L(unsigned int i) const
     { return perm[i]; }
-
-
-
-
-
 
     /**
      * Particle to moment: application of \f$S_\ell(y,\bar y_n)\f$
@@ -507,8 +486,6 @@ public:
                   FReal *const multipoleExpansion,
                   const ContainerClass *const sourceParticles) const;
 
-
-
     /**
      * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
      */
@@ -517,27 +494,6 @@ public:
                   const FReal width,
                   const FReal *const localExpansion,
                   ContainerClass *const localParticles) const;
-
-
-    /**
-     * Local to particle operation: application of \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
-     */
-    template <class ContainerClass>
-    void applyL2PGradient(const FPoint<FReal>& center,
-                          const FReal width,
-                          const FReal *const localExpansion,
-                          ContainerClass *const localParticles) const;
-
-    /**
-     * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ and
-     * \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
-     */
-    template <class ContainerClass>
-    void applyL2PTotal(const FPoint<FReal>& center,
-                       const FReal width,
-                       const FReal *const localExpansion,
-                       ContainerClass *const localParticles) const;
-
 
     /*
     void applyM2M(const unsigned int ChildIndex,
@@ -558,7 +514,6 @@ public:
                                  const_cast<FReal*>(ParentExpansion), ChildExpansion);
     }
     */
-
 
     void applyM2M(const unsigned int ChildIndex,
                   const FReal *const ChildExpansion,
@@ -585,7 +540,6 @@ public:
 
         for (unsigned int n=0; n<nnodes; ++n)	ParentExpansion[perm[2][n]] += PermExp[n];
     }
-
 
     void applyL2L(const unsigned int ChildIndex,
                   const FReal *const ParentExpansion,
@@ -614,12 +568,6 @@ public:
     }
     // total flops count: 3 * ORDER*ORDER*ORDER * (2*ORDER-1)
 };
-
-
-
-
-
-
 
 /**
  * Particle to moment: application of \f$S_\ell(y,\bar y_n)\f$
@@ -651,7 +599,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
         for(unsigned int i=0; i<(ORDER-1)*(ORDER-1); ++i)	W4[idxMul][0][i] = W4[idxMul][1][i] = W4[idxMul][2][i] = FReal(0.);
         for(unsigned int i=0; i<(ORDER-1)*(ORDER-1)*(ORDER-1); ++i)	W8[idxMul][i] = FReal(0.);
     }
-
 
     // loop over source particles
     const FReal*const positionsX = inParticles->getPositions()[0];
@@ -711,7 +658,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
 
     ////////////////////////////////////////////////////////////////////
 
-
     for(int idxMul = 0 ; idxMul < nMul ; ++idxMul){
 
         // loop over interpolation points
@@ -763,7 +709,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
     } // NVALS*NRHS
 
 }
-
 
 ///**
 // * Particle to moment: application of \f$S_\ell(y,\bar y_n)\f$
@@ -830,399 +775,13 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
 //	} // flops: M * (18 + (ORDER-1) * 6 + ORDER*ORDER*ORDER * (10 + (ORDER-2) * 6))
 //}
 
-
-
 /**
- * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
+ * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation),
+ * potential only (same operations as the potential part of the former applyL2PTotal)
  */
 template <class FReal,int ORDER, class MatrixKernelClass, int NVALS>
 template <class ContainerClass>
 inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2P(const FPoint<FReal>& center,
-                                                                              const FReal width,
-                                                                              const FReal *const localExpansion,
-                                                                              ContainerClass *const inParticles) const
-{
-
-    // number of local expansions
-    const int nLoc = nVals*nLhs;
-
-    FReal f1[nLoc];
-    FReal W2[nLoc][3][ ORDER-1];
-    FReal W4[nLoc][3][(ORDER-1)*(ORDER-1)];
-    FReal W8[nLoc][   (ORDER-1)*(ORDER-1)*(ORDER-1)];
-    {
-
-
-        for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc){
-
-            // sum over interpolation points
-            f1[idxLoc] = FReal(0.);
-            for(unsigned int i=0; i<ORDER-1; ++i)                      W2[idxLoc][0][i] = W2[idxLoc][1][i] = W2[idxLoc][2][i] = FReal(0.);
-            for(unsigned int i=0; i<(ORDER-1)*(ORDER-1); ++i)        W4[idxLoc][0][i] = W4[idxLoc][1][i] = W4[idxLoc][2][i] = FReal(0.);
-            for(unsigned int i=0; i<(ORDER-1)*(ORDER-1)*(ORDER-1); ++i)	W8[idxLoc][i] = FReal(0.);
-
-            for (unsigned int idx=0; idx<nnodes; ++idx) {
-                const unsigned int i = node_ids[idx][0];
-                const unsigned int j = node_ids[idx][1];
-                const unsigned int k = node_ids[idx][2];
-
-                f1[idxLoc] += localExpansion[2*idxLoc*nnodes + idx]; // 1 flop
-
-                for (unsigned int l=0; l<ORDER-1; ++l) {
-                    const FReal wx = T[l*ORDER+i] * localExpansion[2*idxLoc*nnodes + idx]; // 1 flops
-                    const FReal wy = T[l*ORDER+j] * localExpansion[2*idxLoc*nnodes + idx]; // 1 flops
-                    const FReal wz = T[l*ORDER+k] * localExpansion[2*idxLoc*nnodes + idx]; // 1 flops
-                    W2[idxLoc][0][l] += wx; // 1 flops
-                    W2[idxLoc][1][l] += wy; // 1 flops
-                    W2[idxLoc][2][l] += wz; // 1 flops
-                    for (unsigned int m=0; m<ORDER-1; ++m) {
-                        const FReal wxy = wx * T[m*ORDER + j]; // 1 flops
-                        const FReal wxz = wx * T[m*ORDER + k]; // 1 flops
-                        const FReal wyz = wy * T[m*ORDER + k]; // 1 flops
-                        W4[idxLoc][0][m*(ORDER-1)+l] += wxy; // 1 flops
-                        W4[idxLoc][1][m*(ORDER-1)+l] += wxz; // 1 flops
-                        W4[idxLoc][2][m*(ORDER-1)+l] += wyz; // 1 flops
-                        for (unsigned int n=0; n<ORDER-1; ++n) {
-                            const FReal wxyz = wxy * T[n*ORDER + k]; // 1 flops
-                            W8[idxLoc][n*(ORDER-1)*(ORDER-1) + m*(ORDER-1) + l]	+= wxyz; // 1 flops
-                        } // (ORDER-1) * 2 flops
-                    } // (ORDER-1) * (6 + (ORDER-1)*2) flops
-                } // (ORDER-1) * (6 + (ORDER-1) * (6 + (ORDER-1)*2)) flops
-            } // ORDER*ORDER*ORDER * (1 + (ORDER-1) * (6 + (ORDER-1) * (6 + (ORDER-1)*2))) flops
-        } // NLOC
-    }
-
-
-    // loop over particles
-    const map_glob_loc<FReal> map(center, width);
-    FPoint<FReal> localPosition;
-
-    // get particles position
-    const FReal*const positionsX = inParticles->getPositions()[0];
-    const FReal*const positionsY = inParticles->getPositions()[1];
-    const FReal*const positionsZ = inParticles->getPositions()[2];
-
-    for(FSize idxPart = 0 ; idxPart < inParticles->getNbParticles() ; ++ idxPart){
-
-        // map global position to [-1,1]
-        map(FPoint<FReal>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition); // 15 flops
-
-        FReal T_of_x[3][ORDER];
-        {
-            T_of_x[0][0] = FReal(1.); T_of_x[0][1] = localPosition.getX();
-            T_of_x[1][0] = FReal(1.); T_of_x[1][1] = localPosition.getY();
-            T_of_x[2][0] = FReal(1.); T_of_x[2][1] = localPosition.getZ();
-            const FReal x2 = FReal(2.) * T_of_x[0][1]; // 1 flop
-            const FReal y2 = FReal(2.) * T_of_x[1][1]; // 1 flop
-            const FReal z2 = FReal(2.) * T_of_x[2][1]; // 1 flop
-            for (unsigned int j=2; j<ORDER; ++j) {
-                T_of_x[0][j] = x2 * T_of_x[0][j-1] - T_of_x[0][j-2]; // 2 flops
-                T_of_x[1][j] = y2 * T_of_x[1][j-1] - T_of_x[1][j-2]; // 2 flops
-                T_of_x[2][j] = z2 * T_of_x[2][j-1] - T_of_x[2][j-2]; // 2 flops
-            }
-        }
-
-        // loop over multipole expansions
-        for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
-
-            for(int idxLhs = 0 ; idxLhs < nLhs ; ++idxLhs){
-
-                const int idxLoc = idxLhs*nVals+idxVals;
-
-                // distribution over potential components:
-                // We sum the multidim contribution of PhysValue
-                // This was originally done at M2L step but moved here
-                // because their storage is required by the force computation.
-                // In fact : f_{ik}(x)=w_j(x) \nabla_{x_i} K_{ij}(x,y)w_j(y))
-                const unsigned int idxPot = idxLhs / nPV;
-
-                FReal*const potentials = inParticles->getPotentials(idxVals,idxPot);
-
-                // interpolate and increment target value
-                FReal targetValue = potentials[idxPart];
-                {
-                    FReal f2, f4, f8;
-                    {
-                        f2 = f4 = f8 = FReal(0.);
-                        for (unsigned int l=1; l<ORDER; ++l) {
-                            f2 +=
-                                    T_of_x[0][l] * W2[idxLoc][0][l-1] +
-                                    T_of_x[1][l] * W2[idxLoc][1][l-1] +
-                                    T_of_x[2][l] * W2[idxLoc][2][l-1]; // 6 flops
-                            for (unsigned int m=1; m<ORDER; ++m) {
-                                f4 +=
-                                        T_of_x[0][l] * T_of_x[1][m] * W4[idxLoc][0][(m-1)*(ORDER-1)+(l-1)] +
-                                        T_of_x[0][l] * T_of_x[2][m] * W4[idxLoc][1][(m-1)*(ORDER-1)+(l-1)] +
-                                        T_of_x[1][l] * T_of_x[2][m] * W4[idxLoc][2][(m-1)*(ORDER-1)+(l-1)]; // 9 flops
-                                for (unsigned int n=1; n<ORDER; ++n) {
-                                    f8 +=
-                                            T_of_x[0][l] * T_of_x[1][m] * T_of_x[2][n] *
-                                            W8[idxLoc][(n-1)*(ORDER-1)*(ORDER-1) + (m-1)*(ORDER-1) + (l-1)];
-                                } // ORDER * 4 flops
-                            } // ORDER * (9 + ORDER * 4) flops
-                        } // ORDER * (ORDER * (9 + ORDER * 4)) flops
-                    }
-                    targetValue = (f1[idxLoc] + FReal(2.)*f2 + FReal(4.)*f4 + FReal(8.)*f8) / nnodes; // 7 flops
-                } // 7 + ORDER * (ORDER * (9 + ORDER * 4)) flops
-
-                // set potential
-                potentials[idxPart] += (targetValue);
-            } // NLHS
-
-        }// NVALS
-
-
-    } // N * (7 + ORDER * (ORDER * (9 + ORDER * 4))) flops
-
-}
-
-
-//	FReal F2[3][ORDER-1];
-//	FBlas::gemtv(ORDER, ORDER-1, FReal(1.), const_cast<FReal*>(T), const_cast<FReal*>(localExpansion), F2[0]);
-//	for (unsigned int i=1; i<ORDER*ORDER; ++i)
-//		FBlas::gemtva(ORDER, ORDER-1, FReal(1.), const_cast<FReal*>(T),
-//									const_cast<FReal*>(localExpansion) + ORDER*i, F2[0]);
-//	for (unsigned int i=0; i<ORDER-1; ++i)
-//		std::cout << W2[0][i] << "\t" << F2[0][i] << std::endl;
-
-//	FReal F2[(ORDER-1) * ORDER*ORDER];
-//	FBlas::gemtm(ORDER, ORDER-1, ORDER*ORDER, FReal(1.), const_cast<FReal*>(T), ORDER,
-//                                                       const_cast<FReal*>(localExpansion), ORDER, F2, ORDER-1);
-//	FReal F[ORDER-1]; FBlas::setzero(ORDER-1, F);
-//	for (unsigned int i=0; i<ORDER-1; ++i)
-//		for (unsigned int j=0; j<ORDER*ORDER; ++j) F[i] += F2[j*(ORDER-1) + i];
-//	for (unsigned int i=0; i<ORDER-1; ++i)
-//		std::cout << W2[0][i] << "\t" << F[i] << std::endl;
-
-
-///**
-// * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
-// */
-//template <int ORDER>
-//template <class ContainerClass>
-//inline void FChebInterpolator<FReal,ORDER>::applyL2P(const FPoint<FReal>& center,
-//                                                                                                                                                                                       const FReal width,
-//                                                                                                                                                                                       const FReal *const localExpansion,
-//                                                                                                                                                                                       ContainerClass *const localParticles) const
-//{
-//	// allocate stuff
-//	const map_glob_loc map(center, width);
-//	FPoint<FReal> localPosition;
-//	FReal T_of_x[ORDER][3];
-//	FReal xpx,ypy,zpz ;
-//	FReal S[3],c1;
-//	//
-//	c1 = FReal(8.) / nnodes ;
-//	typename ContainerClass::BasicIterator iter(*localParticles);
-//	while(iter.hasNotFinished()){
-//
-//		// map global position to [-1,1]
-//		map(iter.data().getPosition(), localPosition); // 15 flops
-//
-//		// evaluate chebyshev polynomials of source particle: T_o(x_i)
-//		T_of_x[0][0] = FReal(1.);	T_of_x[1][0] = localPosition.getX();
-//		T_of_x[0][1] = FReal(1.);	T_of_x[1][1] = localPosition.getY();
-//		T_of_x[0][2] = FReal(1.);	T_of_x[1][2] = localPosition.getZ();
-//		xpx = FReal(2.) * localPosition.getX() ; // 1 flop
-//		ypy = FReal(2.) * localPosition.getY() ; // 1 flop
-//		zpz = FReal(2.) * localPosition.getZ() ; // 1 flop
-//		for (unsigned int o=2; o<ORDER; ++o) {
-//			T_of_x[o][0] = xpx * T_of_x[o-1][0] - T_of_x[o-2][0]; // 2 flop
-//			T_of_x[o][1] = ypy * T_of_x[o-1][1] - T_of_x[o-2][1]; // 2 flop
-//			T_of_x[o][2] = zpz * T_of_x[o-1][2] - T_of_x[o-2][2]; // 2 flop
-//		} // (ORDER-2) * 6 flops
-//
-//		// interpolate and increment target value
-//		FReal targetValue = iter.data().getPotential();
-//		for (unsigned int n=0; n<nnodes; ++n) {
-//			const unsigned int j[3] = {node_ids[n][0], node_ids[n][1], node_ids[n][2]};
-//			S[0] = T_of_x[1][0] * T_of_roots[1][j[0]]; // 1 flops
-//			S[1] = T_of_x[1][1] * T_of_roots[1][j[1]]; // 1 flops
-//			S[2] = T_of_x[1][2] * T_of_roots[1][j[2]]; // 1 flops
-//			for (unsigned int o=2; o<ORDER; ++o) {
-//				S[0] += T_of_x[o][0] * T_of_roots[o][j[0]]; // 2 flops
-//				S[1] += T_of_x[o][1] * T_of_roots[o][j[1]]; // 2 flops
-//				S[2] += T_of_x[o][2] * T_of_roots[o][j[2]]; // 2 flops
-//			} // (ORDER-2) * 6 flops
-//			// gather contributions
-//			S[0] += FReal(0.5); // 1 flops
-//			S[1] += FReal(0.5); // 1 flops
-//			S[2] += FReal(0.5); // 1 flops
-//			targetValue	+= S[0] * S[1] * S[2] * localExpansion[n]; // 4 flops
-//		} // ORDER*ORDER*ORDER * (10 + (ORDER-2) * 6) flops
-//		// scale
-//		targetValue *= c1; // 1 flops
-//
-//		// set potential
-//		iter.data().setPotential(targetValue);
-//
-//		// increment target iterator
-//		iter.gotoNext();
-//	} // N * ORDER*ORDER*ORDER * (10 + (ORDER-2) * 6) flops
-//}
-
-
-
-
-
-
-/**
- * Local to particle operation: application of \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
- */
-template <class FReal,int ORDER, class MatrixKernelClass, int NVALS>
-template <class ContainerClass>
-inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PGradient(const FPoint<FReal>& center,
-                                                                                      const FReal width,
-                                                                                      const FReal *const localExpansion,
-                                                                                      ContainerClass *const inParticles) const
-{
-    ////////////////////////////////////////////////////////////////////
-    // TENSOR-PRODUCT INTERPOLUTION NOT IMPLEMENTED YET HERE!!! ////////
-    ////////////////////////////////////////////////////////////////////
-
-    // number of local expansions
-    const int nLoc = nVals*nLhs;
-
-    // setup local to global mapping
-    const map_glob_loc<FReal> map(center, width);
-    FPoint<FReal> Jacobian;
-    map.computeJacobian(Jacobian);
-    const FReal jacobian[3] = {Jacobian.getX(), Jacobian.getY(), Jacobian.getZ()};
-    FPoint<FReal> localPosition;
-    FReal T_of_x[ORDER][3];
-    FReal U_of_x[ORDER][3];
-    FReal P[3];
-
-    const FReal*const positionsX = inParticles->getPositions()[0];
-    const FReal*const positionsY = inParticles->getPositions()[1];
-    const FReal*const positionsZ = inParticles->getPositions()[2];
-
-    for(FSize idxPart = 0 ; idxPart < inParticles->getNbParticles() ; ++ idxPart){
-
-        // map global position to [-1,1]
-        map(FPoint<FReal>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition);
-
-        // evaluate chebyshev polynomials of source particle
-        // T_0(x_i) and T_1(x_i)
-        T_of_x[0][0] = FReal(1.);	T_of_x[1][0] = localPosition.getX();
-        T_of_x[0][1] = FReal(1.);	T_of_x[1][1] = localPosition.getY();
-        T_of_x[0][2] = FReal(1.);	T_of_x[1][2] = localPosition.getZ();
-        // U_0(x_i) and U_1(x_i)
-        U_of_x[0][0] = FReal(1.);	U_of_x[1][0] = localPosition.getX() * FReal(2.);
-        U_of_x[0][1] = FReal(1.);	U_of_x[1][1] = localPosition.getY() * FReal(2.);
-        U_of_x[0][2] = FReal(1.);	U_of_x[1][2] = localPosition.getZ() * FReal(2.);
-        for (unsigned int o=2; o<ORDER; ++o) {
-            // T_o(x_i)
-            T_of_x[o][0] = FReal(2.)*localPosition.getX()*T_of_x[o-1][0] - T_of_x[o-2][0];
-            T_of_x[o][1] = FReal(2.)*localPosition.getY()*T_of_x[o-1][1] - T_of_x[o-2][1];
-            T_of_x[o][2] = FReal(2.)*localPosition.getZ()*T_of_x[o-1][2] - T_of_x[o-2][2];
-            // U_o(x_i)
-            U_of_x[o][0] = FReal(2.)*localPosition.getX()*U_of_x[o-1][0] - U_of_x[o-2][0];
-            U_of_x[o][1] = FReal(2.)*localPosition.getY()*U_of_x[o-1][1] - U_of_x[o-2][1];
-            U_of_x[o][2] = FReal(2.)*localPosition.getZ()*U_of_x[o-1][2] - U_of_x[o-2][2];
-        }
-
-        // scale, because dT_o/dx = oU_{o-1}
-        for (unsigned int o=2; o<ORDER; ++o) {
-            U_of_x[o-1][0] *= FReal(o);
-            U_of_x[o-1][1] *= FReal(o);
-            U_of_x[o-1][2] *= FReal(o);
-        }
-
-        // apply P and increment forces
-        FReal forces[nLoc][3];
-        for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc)
-            for (unsigned int i=0; i<3; ++i)
-                forces[idxLoc][i] = FReal(0.);
-
-        for (unsigned int n=0; n<nnodes; ++n) {
-
-            // tensor indices of chebyshev nodes
-            const unsigned int j[3] = {node_ids[n][0], node_ids[n][1], node_ids[n][2]};
-
-            // f0 component //////////////////////////////////////
-            P[0] = U_of_x[0][0] * T_of_roots[1][j[0]];
-            P[1] = T_of_x[1][1] * T_of_roots[1][j[1]];
-            P[2] = T_of_x[1][2] * T_of_roots[1][j[2]];
-            for (unsigned int o=2; o<ORDER; ++o) {
-                P[0] += U_of_x[o-1][0] * T_of_roots[o][j[0]];
-                P[1] += T_of_x[o  ][1] * T_of_roots[o][j[1]];
-                P[2] += T_of_x[o  ][2] * T_of_roots[o][j[2]];
-            }
-            P[0] *= FReal(2.);
-            P[1] *= FReal(2.); P[1] += FReal(1.);
-            P[2] *= FReal(2.); P[2] += FReal(1.);
-            for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc)
-                forces[idxLoc][0]	+= P[0] * P[1] * P[2] * localExpansion[2*idxLoc*nnodes + n];
-
-            // f1 component //////////////////////////////////////
-            P[0] = T_of_x[1][0] * T_of_roots[1][j[0]];
-            P[1] = U_of_x[0][1] * T_of_roots[1][j[1]];
-            P[2] = T_of_x[1][2] * T_of_roots[1][j[2]];
-            for (unsigned int o=2; o<ORDER; ++o) {
-                P[0] += T_of_x[o  ][0] * T_of_roots[o][j[0]];
-                P[1] += U_of_x[o-1][1] * T_of_roots[o][j[1]];
-                P[2] += T_of_x[o  ][2] * T_of_roots[o][j[2]];
-            }
-            P[0] *= FReal(2.); P[0] += FReal(1.);
-            P[1] *= FReal(2.);
-            P[2] *= FReal(2.); P[2] += FReal(1.);
-            for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc)
-                forces[idxLoc][1]	+= P[0] * P[1] * P[2] * localExpansion[2*idxLoc*nnodes + n];
-
-            // f2 component //////////////////////////////////////
-            P[0] = T_of_x[1][0] * T_of_roots[1][j[0]];
-            P[1] = T_of_x[1][1] * T_of_roots[1][j[1]];
-            P[2] = U_of_x[0][2] * T_of_roots[1][j[2]];
-            for (unsigned int o=2; o<ORDER; ++o) {
-                P[0] += T_of_x[o  ][0] * T_of_roots[o][j[0]];
-                P[1] += T_of_x[o  ][1] * T_of_roots[o][j[1]];
-                P[2] += U_of_x[o-1][2] * T_of_roots[o][j[2]];
-            }
-            P[0] *= FReal(2.); P[0] += FReal(1.);
-            P[1] *= FReal(2.); P[1] += FReal(1.);
-            P[2] *= FReal(2.);
-            for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc)
-                forces[idxLoc][2]	+= P[0] * P[1] * P[2] * localExpansion[2*idxLoc*nnodes + n];
-        }
-
-        for(int idxLhs = 0 ; idxLhs < nLhs ; ++idxLhs){
-            const unsigned int idxPot = idxLhs / nPV;
-            const unsigned int idxPV  = idxLhs % nPV;
-
-            for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
-
-                const int idxLoc = idxLhs*nVals+idxVals;
-
-                // scale forces
-                forces[idxLoc][0] *= jacobian[0] / nnodes;
-                forces[idxLoc][1] *= jacobian[1] / nnodes;
-                forces[idxLoc][2] *= jacobian[2] / nnodes;
-
-                // get pointers to PhysValues and force components
-                const FReal*const physicalValues = inParticles->getPhysicalValues(idxVals,idxPV);
-                FReal*const forcesX = inParticles->getForcesX(idxVals,idxPot);
-                FReal*const forcesY = inParticles->getForcesY(idxVals,idxPot);
-                FReal*const forcesZ = inParticles->getForcesZ(idxVals,idxPot);
-
-                // set computed forces
-                forcesX[idxPart] += forces[idxLoc][0] * physicalValues[idxPart];
-                forcesY[idxPart] += forces[idxLoc][1] * physicalValues[idxPart];
-                forcesZ[idxPart] += forces[idxLoc][2] * physicalValues[idxPart];
-
-            } // NVALS
-        } // NLHS
-    } // N
-}
-
-
-/**
- * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ and
- * \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
- */
-template <class FReal,int ORDER, class MatrixKernelClass, int NVALS>
-template <class ContainerClass>
-inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTotal(const FPoint<FReal>& center,
                                                                                    const FReal width,
                                                                                    const FReal *const localExpansion,
                                                                                    ContainerClass *const inParticles) const
@@ -1301,9 +860,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
 
     // loop over particles
     const map_glob_loc<FReal> map(center, width);
-    FPoint<FReal> Jacobian;
-    map.computeJacobian(Jacobian); // 6 flops
-    const FReal jacobian[3] = {Jacobian.getX(), Jacobian.getY(), Jacobian.getZ()};
     FPoint<FReal> localPosition;
 
     const FReal*const positionsX = inParticles->getPositions()[0];
@@ -1315,7 +871,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
         // map global position to [-1,1]
         map(FPoint<FReal>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition); // 15 flops
 
-        FReal U_of_x[3][ORDER];
         FReal T_of_x[3][ORDER];
         {
             T_of_x[0][0] = FReal(1.); T_of_x[0][1] = localPosition.getX();
@@ -1324,32 +879,17 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
             const FReal x2 = FReal(2.) * T_of_x[0][1]; // 1 flop
             const FReal y2 = FReal(2.) * T_of_x[1][1]; // 1 flop
             const FReal z2 = FReal(2.) * T_of_x[2][1]; // 1 flop
-            U_of_x[0][0] = FReal(1.);	U_of_x[0][1] = x2;
-            U_of_x[1][0] = FReal(1.);	U_of_x[1][1] = y2;
-            U_of_x[2][0] = FReal(1.);	U_of_x[2][1] = z2;
             for (unsigned int j=2; j<ORDER; ++j) {
                 T_of_x[0][j] = x2 * T_of_x[0][j-1] - T_of_x[0][j-2]; // 2 flops
                 T_of_x[1][j] = y2 * T_of_x[1][j-1] - T_of_x[1][j-2]; // 2 flops
                 T_of_x[2][j] = z2 * T_of_x[2][j-1] - T_of_x[2][j-2]; // 2 flops
-                U_of_x[0][j] = x2 * U_of_x[0][j-1] - U_of_x[0][j-2]; // 2 flops
-                U_of_x[1][j] = y2 * U_of_x[1][j-1] - U_of_x[1][j-2]; // 2 flops
-                U_of_x[2][j] = z2 * U_of_x[2][j-1] - U_of_x[2][j-2]; // 2 flops
-            }
-            // scale, because dT_j/dx = jU_{j-1}
-            for (unsigned int j=2; j<ORDER; ++j) {
-                U_of_x[0][j-1] *= FReal(j); // 1 flops
-                U_of_x[1][j-1] *= FReal(j); // 1 flops
-                U_of_x[2][j-1] *= FReal(j); // 1 flops
             }
         } // 3 + (ORDER-2)*15
 
-        // apply P and increment forces
+        // apply P
         FReal potential[nLoc];
-        FReal forces[nLoc][3];
         for(int idxLoc = 0 ; idxLoc < nLoc ; ++idxLoc){
             potential[idxLoc]= FReal(0.);
-            for (unsigned int i=0; i<3; ++i)
-                forces[idxLoc][i] = FReal(0.);
         }
 
         for( int idxVals = 0 ; idxVals < nVals ; ++idxVals){
@@ -1365,9 +905,6 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
                         for (unsigned int l=1; l<ORDER; ++l) {
                             const FReal w2[3] = {W2[idxLoc][0][l-1], W2[idxLoc][1][l-1], W2[idxLoc][2][l-1]};
                             f2[0] += T_of_x[0][l  ] * w2[0] + T_of_x[1][l] * w2[1] + T_of_x[2][l] * w2[2]; // 6 flops
-                            f2[1] += U_of_x[0][l-1] * w2[0]; // 2 flops
-                            f2[2] += U_of_x[1][l-1] * w2[1]; // 2 flops
-                            f2[3] += U_of_x[2][l-1] * w2[2]; // 2 flops
                             for (unsigned int m=1; m<ORDER; ++m) {
                                 const unsigned int w4idx = (m-1)*(ORDER-1)+(l-1);
                                 const FReal w4[3] = {W4[idxLoc][0][w4idx], W4[idxLoc][1][w4idx], W4[idxLoc][2][w4idx]};
@@ -1375,42 +912,23 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
                                         T_of_x[0][l] * T_of_x[1][m] * w4[0] +
                                         T_of_x[0][l] * T_of_x[2][m] * w4[1] +
                                         T_of_x[1][l] * T_of_x[2][m] * w4[2]; // 9 flops
-                                f4[1] += U_of_x[0][l-1] * T_of_x[1][m]   * w4[0] + U_of_x[0][l-1] * T_of_x[2][m]   * w4[1]; // 6 flops
-                                f4[2] += T_of_x[0][l]   * U_of_x[1][m-1] * w4[0] + U_of_x[1][l-1] * T_of_x[2][m]   * w4[2]; // 6 flops
-                                f4[3] += T_of_x[0][l]   * U_of_x[2][m-1] * w4[1] + T_of_x[1][l]   * U_of_x[2][m-1] * w4[2]; // 6 flops
                                 for (unsigned int n=1; n<ORDER; ++n) {
                                     const FReal w8 = W8[idxLoc][(n-1)*(ORDER-1)*(ORDER-1) + (m-1)*(ORDER-1) + (l-1)];
                                     f8[0] += T_of_x[0][l]   * T_of_x[1][m]   * T_of_x[2][n]   * w8; // 4 flops
-                                    f8[1] += U_of_x[0][l-1] * T_of_x[1][m]   * T_of_x[2][n]   * w8; // 4 flops
-                                    f8[2] += T_of_x[0][l]   * U_of_x[1][m-1] * T_of_x[2][n]   * w8; // 4 flops
-                                    f8[3] += T_of_x[0][l]   * T_of_x[1][m]   * U_of_x[2][n-1] * w8; // 4 flops
                                 } // (ORDER-1) * 16 flops
                             } // (ORDER-1) * (27 + (ORDER-1) * 16) flops
                         } // (ORDER-1) * ((ORDER-1) * (27 + (ORDER-1) * 16)) flops
                     }
                     potential[idxLoc] = (f1[idxLoc] + FReal(2.)*f2[0] + FReal(4.)*f4[0] + FReal(8.)*f8[0]) / nnodes; // 7 flops
-                    forces[idxLoc][0] = (     FReal(2.)*f2[1] + FReal(4.)*f4[1] + FReal(8.)*f8[1]) * jacobian[0] / nnodes; // 7 flops
-                    forces[idxLoc][1] = (     FReal(2.)*f2[2] + FReal(4.)*f4[2] + FReal(8.)*f8[2]) * jacobian[1] / nnodes; // 7 flops
-                    forces[idxLoc][2] = (     FReal(2.)*f2[3] + FReal(4.)*f4[3] + FReal(8.)*f8[3]) * jacobian[2] / nnodes; // 7 flops
                 } // 28 + (ORDER-1) * ((ORDER-1) * (27 + (ORDER-1) * 16)) flops
 
                 const  int idxPot = idxLhs / nPV;
-                const  int idxPV  = idxLhs % nPV;
 
-                // get potentials, physValues and forces components
-                const FReal*const physicalValues = inParticles->getPhysicalValues(idxVals,idxPV);
-                FReal*const forcesX = inParticles->getForcesX(idxVals,idxPot);
-                FReal*const forcesY = inParticles->getForcesY(idxVals,idxPot);
-                FReal*const forcesZ = inParticles->getForcesZ(idxVals,idxPot);
+                // get potentials
                 FReal*const potentials = inParticles->getPotentials(idxVals,idxPot);
 
                 // set computed potential
                 potentials[idxPart] += (potential[idxLoc]); // 1 flop
-
-                // set computed forces
-                forcesX[idxPart] += forces[idxLoc][0] * physicalValues[idxPart];
-                forcesY[idxPart] += forces[idxLoc][1] * physicalValues[idxPart];
-                forcesZ[idxPart] += forces[idxLoc][2] * physicalValues[idxPart]; // 6 flops
 
             }// NLHS
 
@@ -1419,6 +937,88 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
     } // N * (38 + (ORDER-2)*15 + (ORDER-1)*((ORDER-1) * (27 + (ORDER-1) * 16))) + 6 flops
 }
 
+//	FReal F2[3][ORDER-1];
+//	FBlas::gemtv(ORDER, ORDER-1, FReal(1.), const_cast<FReal*>(T), const_cast<FReal*>(localExpansion), F2[0]);
+//	for (unsigned int i=1; i<ORDER*ORDER; ++i)
+//		FBlas::gemtva(ORDER, ORDER-1, FReal(1.), const_cast<FReal*>(T),
+//									const_cast<FReal*>(localExpansion) + ORDER*i, F2[0]);
+//	for (unsigned int i=0; i<ORDER-1; ++i)
+//		std::cout << W2[0][i] << "\t" << F2[0][i] << std::endl;
+
+//	FReal F2[(ORDER-1) * ORDER*ORDER];
+//	FBlas::gemtm(ORDER, ORDER-1, ORDER*ORDER, FReal(1.), const_cast<FReal*>(T), ORDER,
+//                                                       const_cast<FReal*>(localExpansion), ORDER, F2, ORDER-1);
+//	FReal F[ORDER-1]; FBlas::setzero(ORDER-1, F);
+//	for (unsigned int i=0; i<ORDER-1; ++i)
+//		for (unsigned int j=0; j<ORDER*ORDER; ++j) F[i] += F2[j*(ORDER-1) + i];
+//	for (unsigned int i=0; i<ORDER-1; ++i)
+//		std::cout << W2[0][i] << "\t" << F[i] << std::endl;
+
+///**
+// * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
+// */
+//template <int ORDER>
+//template <class ContainerClass>
+//inline void FChebInterpolator<FReal,ORDER>::applyL2P(const FPoint<FReal>& center,
+//                                                                                                                                                                                       const FReal width,
+//                                                                                                                                                                                       const FReal *const localExpansion,
+//                                                                                                                                                                                       ContainerClass *const localParticles) const
+//{
+//	// allocate stuff
+//	const map_glob_loc map(center, width);
+//	FPoint<FReal> localPosition;
+//	FReal T_of_x[ORDER][3];
+//	FReal xpx,ypy,zpz ;
+//	FReal S[3],c1;
+//	//
+//	c1 = FReal(8.) / nnodes ;
+//	typename ContainerClass::BasicIterator iter(*localParticles);
+//	while(iter.hasNotFinished()){
+//
+//		// map global position to [-1,1]
+//		map(iter.data().getPosition(), localPosition); // 15 flops
+//
+//		// evaluate chebyshev polynomials of source particle: T_o(x_i)
+//		T_of_x[0][0] = FReal(1.);	T_of_x[1][0] = localPosition.getX();
+//		T_of_x[0][1] = FReal(1.);	T_of_x[1][1] = localPosition.getY();
+//		T_of_x[0][2] = FReal(1.);	T_of_x[1][2] = localPosition.getZ();
+//		xpx = FReal(2.) * localPosition.getX() ; // 1 flop
+//		ypy = FReal(2.) * localPosition.getY() ; // 1 flop
+//		zpz = FReal(2.) * localPosition.getZ() ; // 1 flop
+//		for (unsigned int o=2; o<ORDER; ++o) {
+//			T_of_x[o][0] = xpx * T_of_x[o-1][0] - T_of_x[o-2][0]; // 2 flop
+//			T_of_x[o][1] = ypy * T_of_x[o-1][1] - T_of_x[o-2][1]; // 2 flop
+//			T_of_x[o][2] = zpz * T_of_x[o-1][2] - T_of_x[o-2][2]; // 2 flop
+//		} // (ORDER-2) * 6 flops
+//
+//		// interpolate and increment target value
+//		FReal targetValue = iter.data().getPotential();
+//		for (unsigned int n=0; n<nnodes; ++n) {
+//			const unsigned int j[3] = {node_ids[n][0], node_ids[n][1], node_ids[n][2]};
+//			S[0] = T_of_x[1][0] * T_of_roots[1][j[0]]; // 1 flops
+//			S[1] = T_of_x[1][1] * T_of_roots[1][j[1]]; // 1 flops
+//			S[2] = T_of_x[1][2] * T_of_roots[1][j[2]]; // 1 flops
+//			for (unsigned int o=2; o<ORDER; ++o) {
+//				S[0] += T_of_x[o][0] * T_of_roots[o][j[0]]; // 2 flops
+//				S[1] += T_of_x[o][1] * T_of_roots[o][j[1]]; // 2 flops
+//				S[2] += T_of_x[o][2] * T_of_roots[o][j[2]]; // 2 flops
+//			} // (ORDER-2) * 6 flops
+//			// gather contributions
+//			S[0] += FReal(0.5); // 1 flops
+//			S[1] += FReal(0.5); // 1 flops
+//			S[2] += FReal(0.5); // 1 flops
+//			targetValue	+= S[0] * S[1] * S[2] * localExpansion[n]; // 4 flops
+//		} // ORDER*ORDER*ORDER * (10 + (ORDER-2) * 6) flops
+//		// scale
+//		targetValue *= c1; // 1 flops
+//
+//		// set potential
+//		iter.data().setPotential(targetValue);
+//
+//		// increment target iterator
+//		iter.gotoNext();
+//	} // N * ORDER*ORDER*ORDER * (10 + (ORDER-2) * 6) flops
+//}
 
 ///**
 // * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ and
@@ -1527,15 +1127,7 @@ inline void FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PTot
 //	}
 //}
 
-
 #endif
-
-
-
-
-
-
-
 
 ////struct IMN2MNI {
 ////	enum {size = ORDER * (ORDER-1) * (ORDER-1)};

@@ -157,7 +157,7 @@ public:
         //                                                  TargetParticles);
 
         // 2.c) apply Sx and Px (grad Sx)
-        AbstractBaseClass::Interpolator->applyL2PTotal(LeafCellCenter, AbstractBaseClass::BoxWidthLeaf,
+        AbstractBaseClass::Interpolator->applyL2P(LeafCellCenter, AbstractBaseClass::BoxWidthLeaf,
                                                         LeafCell->getLocal(0), TargetParticles);
 
     }

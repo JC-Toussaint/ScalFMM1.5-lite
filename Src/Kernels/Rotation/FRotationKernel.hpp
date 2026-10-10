@@ -181,7 +181,6 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
     // finally we compute the vectors for M2L
     ///////////////////////////////////////////////////////
 
-
     /** The following comments include formula taken from the original vectors
       *
       *
@@ -495,8 +494,6 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                 }
     }
 
-
-
     ///////////////////////////////////////////////////////
     // d_lmk computation
     // This part is constitued of 6 functions :
@@ -622,7 +619,6 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
             }
         }
     }
-
 
     /** Compute d_mlk for \theta = ]0;PI/2[
       * This used the second formula from the paper:
@@ -844,7 +840,6 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
     ///////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////
-
 
     /** Return the position of a leaf from its tree coordinate
       * This is used only for the leaf
@@ -1191,13 +1186,9 @@ public:
         const FPoint<FReal> cellPosition = getLeafCenter(inLocal->getCoordinate());
 
         // For all particles in the leaf box
-        const FReal*const physicalValues = inParticles->getPhysicalValues();
         const FReal*const positionsX = inParticles->getPositions()[0];
         const FReal*const positionsY = inParticles->getPositions()[1];
         const FReal*const positionsZ = inParticles->getPositions()[2];
-        FReal*const forcesX = inParticles->getForcesX();
-        FReal*const forcesY = inParticles->getForcesY();
-        FReal*const forcesZ = inParticles->getForcesZ();
         FReal*const potentials = inParticles->getPotentials();
 
         for(FSize idxPart = 0 ; idxPart < inParticles->getNbParticles() ; ++ idxPart){
@@ -1237,80 +1228,6 @@ public:
                 }
             }
 
-            // compute the forces
-            {
-                FReal Fr = 0;
-                FReal FO = 0;
-                FReal Fp = 0;
-
-                int index_lm = 1;          // To get atLm(l,m), warning starts with l = 1
-                FReal fl = 1.0;            // To get "l" as a float
-
-                for(int l = 1 ; l <= P ; ++l, ++fl){
-                    // first m == 0
-                    {
-                        Fr += fl * u[index_lm].real() * minus_r_pow_l_legendre_div_fact_lm[index_lm];
-                    }
-                    {
-                        const FReal coef = minus_r_pow_l_div_fact_lm[index_lm] * (fl * (sph.getCosTheta()*legendre[index_lm]
-                                                                                        - legendre[index_lm-l]) / sph.getSinTheta());
-                        const FReal dI_real = coef;
-                        // F(O) += 2 * Real(L dI/dO)
-                        FO += u[index_lm].real() * dI_real;
-                    }
-                    ++index_lm;
-                    // then 0 < m
-                    for(int m = 1 ; m <= l ; ++m, ++index_lm){
-                        {
-                            const FReal coef = minus_r_pow_l_legendre_div_fact_lm[index_lm];
-                            const FReal I_real = coef * cos_m_phi_i_pow_m[m];
-                            const FReal I_imag = coef * sin_m_phi_i_pow_m[m];
-                            // F(r) += 2 x l x Real(LI)
-                            Fr += 2 * fl * (u[index_lm].real() * I_real - u[index_lm].imag() * I_imag);
-                            // F(p) += -2 x m x Imag(LI)
-                            Fp -= 2 * FReal(m) * (u[index_lm].real() * I_imag + u[index_lm].imag() * I_real);
-                        }
-                        {
-                            const FReal legendre_l_minus_1 = (m == l) ? FReal(0.0) : FReal(l+m)*legendre[index_lm-l];
-                            const FReal coef = minus_r_pow_l_div_fact_lm[index_lm] * ((fl * sph.getCosTheta()*legendre[index_lm]
-                                                                                       - legendre_l_minus_1) / sph.getSinTheta());
-                            const FReal dI_real = coef * cos_m_phi_i_pow_m[m];
-                            const FReal dI_imag = coef * sin_m_phi_i_pow_m[m];
-                            // F(O) += 2 * Real(L dI/dO)
-                            FO += FReal(2.0) * (u[index_lm].real() * dI_real - u[index_lm].imag() * dI_imag);
-                        }
-                    }
-                }
-                // div by r
-                Fr /= sph.getR();
-                FO /= sph.getR();
-                Fp /= sph.getR() * sph.getSinTheta();
-
-                // copy variable from spherical position
-                const FReal cosPhi     = std::cos(sph.getPhi());
-                const FReal sinPhi     = std::sin(sph.getPhi());
-                const FReal physicalValue = physicalValues[idxPart];
-
-                // compute forces
-                const FReal forceX = (
-                            cosPhi * sph.getSinTheta() * Fr  +
-                            cosPhi * sph.getCosTheta() * FO +
-                            (-sinPhi) * Fp) * physicalValue;
-
-                const FReal forceY = (
-                            sinPhi * sph.getSinTheta() * Fr  +
-                            sinPhi * sph.getCosTheta() * FO +
-                            cosPhi * Fp) * physicalValue;
-
-                const FReal forceZ = (
-                            sph.getCosTheta() * Fr +
-                            (-sph.getSinTheta()) * FO) * physicalValue;
-
-                // inc particles forces
-                forcesX[idxPart] += forceX;
-                forcesY[idxPart] += forceY;
-                forcesZ[idxPart] += forceZ;
-            }
             // compute the potential
             {
                 FReal magnitude = 0;
@@ -1334,7 +1251,6 @@ public:
             }
         }
     }
-
 
     /** P2P
       * This function proceed the P2P using particlesMutualInteraction
@@ -1369,7 +1285,6 @@ public:
         FP2PRT<FReal>::template FullMutual<ContainerClass>(inTargets,inNeighbors,nbNeighborsToCompute);
     }
 
-
     /** Use mutual even if it not useful and call particlesMutualInteraction */
     void P2PRemote(const FTreeCoordinate& /*inPosition*/,
                    ContainerClass* const FRestrict inTargets, const ContainerClass* const FRestrict /*inSources*/,
@@ -1378,6 +1293,5 @@ public:
         FP2PRT<FReal>::template FullRemote<ContainerClass>(inTargets,inNeighbors,inSize);
     }
 };
-
 
 #endif // FROTATIONKERNEL_HPP
