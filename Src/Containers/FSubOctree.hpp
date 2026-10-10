@@ -112,50 +112,6 @@ protected:
         if(arrayIndex > this->rightLeafIndex) this->rightLeafIndex = arrayIndex;
     }
 
-    /** Remove every cells from the array index
-      * the leaf cell is removed, then we go upper and test,
-      * does the upper cell do no have any more child, if tree remove
-      * this cell too and go upper, etc.
-      * @return true if there is no more cells in this tree
-      */
-    bool removeCellsFromLeaf( int arrayIndex ){
-        // last array index
-        int indexLevel = this->subOctreeHeight - 1;
-
-        // Manage border limits
-        if(arrayIndex == this->leftLeafIndex && arrayIndex == this->rightLeafIndex){
-            this->rightLeafIndex = -1;
-            // only one cells, return true
-        }
-        else if(arrayIndex == this->leftLeafIndex){
-            while( !this->cells[indexLevel][++this->leftLeafIndex] );
-        }
-        else if(arrayIndex == this->rightLeafIndex){
-            while( !this->cells[indexLevel][--this->rightLeafIndex] );
-        }
-
-        // remove the last cells
-        delete this->cells[indexLevel][arrayIndex];
-        this->cells[indexLevel][arrayIndex] =nullptr;
-        // progress upper
-        --indexLevel;
-        arrayIndex >>= 3;
-
-        // to test if 8 child are empty
-        CellClass* emptyArray[8];
-        memset(emptyArray , 0, sizeof(CellClass*) * 8);
-
-        // continue while we are not in the last level and our child are empty
-        while(indexLevel >= 0 && memcmp(&this->cells[indexLevel+1][arrayIndex<<3], emptyArray, 8 * sizeof(CellClass*)) == 0 ){
-            delete this->cells[indexLevel][arrayIndex];
-            this->cells[indexLevel][arrayIndex] = nullptr;
-
-            --indexLevel;
-            arrayIndex >>= 3;
-        }
-        // return true if there is no more child == 0 cell at level 0
-        return memcmp(this->cells[0], emptyArray, 8 * sizeof(CellClass*)) == 0;
-    }
 
     /** Disable copy */
 private:
@@ -222,16 +178,7 @@ public:
     * @param inParticle the particle to insert (must inherit from FAbstractParticle)
     * @param inParticle the inTreeHeight the height of the tree
     */
-    /*template<typename... Args>
-    void insert(const MortonIndex index, const FTreeCoordinate& host, const int inTreeHeight, const FPoint<FReal>& inParticlePosition,
-                        Args... args){
-    }*/
 
-    /**
-      * Remove a leaf and every cells if needed
-      * @return true if the subtree does not contains any more cells
-      */
-    virtual bool removeLeaf(const MortonIndex index, const int inTreeHeight) = 0;
 
     ///////////////////////////////////////
     // This is the FOctree::Iterator Part
@@ -384,34 +331,7 @@ public:
         this->leafs[arrayIndex]->push(inParticlePosition, args... );
     }
 
-    LeafClass* createLeaf(const MortonIndex index, const FTreeCoordinate& host, const int inTreeHeight){
-        // Get the morton index for the leaf level
-        const MortonIndex arrayIndex = Parent::getLeafIndex(index,inTreeHeight);
-        // is there already a leaf?
-        if( !this->leafs[arrayIndex] ){
-            this->leafs[arrayIndex] = new LeafClass();
 
-            Parent::newLeafInserted( int(arrayIndex) , index, host);
-        }
-        // add particle to leaf list
-        return this->leafs[arrayIndex];
-    }
-
-    /**
-      * Remove a leaf and every cells if needed
-      */
-    bool removeLeaf(const MortonIndex index, const int inTreeHeight) {
-        // Get the morton index for the leaf level
-        const MortonIndex arrayIndex = Parent::getLeafIndex(index,inTreeHeight);
-        if( this->leafs[arrayIndex] ){
-            // remove container
-            delete this->leafs[arrayIndex];
-            this->leafs[arrayIndex] = nullptr;
-
-            return Parent::removeCellsFromLeaf( int(arrayIndex) );
-        }
-        return false;
-    }
 
     /** To get access to leafs elements
       * @param index the position of the leaf
@@ -550,57 +470,7 @@ public:
         }
     }
 
-    LeafClass* createLeaf(const MortonIndex index, const FTreeCoordinate& host, const int inTreeHeight){
-        // We need the morton index at the bottom level of this sub octree
-        // so we remove the right side
-        const MortonIndex arrayIndex = Parent::getLeafIndex(index,inTreeHeight);
-        // Is there already a leaf?
-        if( !this->subleafs[arrayIndex] ){
-            // We need to create leaf sub octree
-            const int nextSubOctreePosition = this->subOctreePosition + this->subOctreeHeight;
-            const int nextSubOctreeHeight = std::min(inTreeHeight - nextSubOctreePosition, this->subOctreeHeight);
 
-            // Next suboctree is a middle suboctree
-            if(inTreeHeight > nextSubOctreeHeight + nextSubOctreePosition){
-                this->subleafs[arrayIndex] = new FSubOctree(this,int(arrayIndex),nextSubOctreeHeight,nextSubOctreePosition);
-            }
-            // Or next suboctree contains the reail leaf!
-            else{
-                this->subleafs[arrayIndex] = new SubOctreeWithLeaf(this,int(arrayIndex),nextSubOctreeHeight,nextSubOctreePosition);
-            }
-
-            const FTreeCoordinate hostAtLevel(
-                        host.getX() >> (inTreeHeight - nextSubOctreePosition ),
-                        host.getY() >> (inTreeHeight - nextSubOctreePosition ),
-                        host.getZ() >> (inTreeHeight - nextSubOctreePosition ));
-
-            // We need to inform parent class
-            Parent::newLeafInserted( int(arrayIndex), index >> (3 * (inTreeHeight-nextSubOctreePosition) ), hostAtLevel);
-        }
-        // Ask next suboctree to insert the particle
-        if(this->subleafs[arrayIndex]->isLeafPart()){
-            return ((SubOctreeWithLeaf*)this->subleafs[arrayIndex])->createLeaf( index, host, inTreeHeight );
-        }
-        else{
-            return ((FSubOctree*)this->subleafs[arrayIndex])->createLeaf( index, host, inTreeHeight );
-        }
-    }
-
-    /**
-      * Remove a leaf and every cells if needed
-      */
-    bool removeLeaf(const MortonIndex index, const int inTreeHeight) {
-        // Get the morton index for the leaf level
-        const MortonIndex arrayIndex = Parent::getLeafIndex(index,inTreeHeight);
-        if( this->subleafs[arrayIndex]->removeLeaf(index, inTreeHeight) ){
-            // remove container
-            delete this->subleafs[arrayIndex];
-            this->subleafs[arrayIndex] = nullptr;
-
-            return Parent::removeCellsFromLeaf( int(arrayIndex) );
-        }
-        return false;
-    }
 
     /** To get access to leafs elements (child suboctree)
       * @param index the position of the leaf/child suboctree
