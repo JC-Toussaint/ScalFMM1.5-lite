@@ -2,6 +2,7 @@
 #ifndef FBASIC_PARTICLE_CONTAINER_HPP_
 #define FBASIC_PARTICLE_CONTAINER_HPP_
 
+#include <cstring>
 #include <array>
 #include <algorithm>
 #include <new>

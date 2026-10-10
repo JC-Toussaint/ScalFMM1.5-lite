@@ -16,8 +16,6 @@ endif()
 # Options
 #===========================================================================
 option(SCALFMM_USE_ASSERT    "Enable safety tests during execution"                ON)
-option(SCALFMM_USE_LOG       "Enable the debug log (FLog)"                         OFF)
-option(SCALFMM_USE_MEM_STATS "Trace memory allocations"                            OFF)
 option(SCALFMM_USE_SSE       "Use SSE intrinsics in P2P"                           OFF)
 option(SCALFMM_USE_AVX       "Use AVX intrinsics in P2P"                           ON)
 option(SCALFMM_USE_NATIVE    "Compile with -march=native"                          ON)
@@ -78,9 +76,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Src/ScalFmmConfig.h.cmake
 # Library
 #===========================================================================
 add_library(scalfmm STATIC
-  Src/Utils/FAlgorithmTimers.cpp
-  Src/Utils/FLog.cpp
-  Src/Utils/FMemStats.cpp)
+  Src/Utils/FAlgorithmTimers.cpp)
 set_target_properties(scalfmm PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 target_compile_features(scalfmm PUBLIC cxx_std_17)

@@ -2,6 +2,7 @@
 #ifndef FASSERT_HPP
 #define FASSERT_HPP
 
+#include <cstdlib>
 #include <iostream>
 #include <cassert>
 

@@ -4,7 +4,6 @@
 
 
 #include "../Utils/FAssert.hpp"
-#include "../Utils/FLog.hpp"
 
 #include "../Utils/FTic.hpp"
 #include "../Utils/FGlobal.hpp"
@@ -83,8 +82,6 @@ public:
         
         FAbstractAlgorithm::setNbLevelsInTree(tree->getHeight());
         
-        FLOG(FLog::Controller << "FFmmAlgorithmThread (Max Thread " << omp_get_max_threads() << ")\n");
-        FLOG(FLog::Controller << "\t static schedule " << (userChunkSize == -1 ? "static" : (userChunkSize == 0 ? "N/p^2" : std::to_string(userChunkSize))) << ")\n");
     }
     
     /** Default destructor */
@@ -164,8 +161,6 @@ protected:
 
     /** Runs the P2M kernel. */
     void bottomPass(){
-        FLOG( FLog::Controller.write("\tStart Bottom Pass\n").write(FLog::Flush) );
-        FLOG(FTic counterTime);
 
         typename OctreeClass::Iterator octreeIterator(tree);
         int leafs = 0;
@@ -178,7 +173,6 @@ protected:
 
         const int chunkSize = this->getChunkSize(leafs);
 
-        FLOG(FTic computationCounter);
         #pragma omp parallel num_threads(MaxThreads)
         {
             KernelClass * const myThreadkernels = kernels[omp_get_thread_num()];
@@ -189,10 +183,7 @@ protected:
                 myThreadkernels->P2M( iterArray[idxLeafs].getCurrentCell() , iterArray[idxLeafs].getCurrentListSrc());
             }
         }
-        FLOG(computationCounter.tac() );
 
-        FLOG( FLog::Controller << "\tFinished (@Bottom Pass (P2M) = "  << counterTime.tacAndElapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << computationCounter.elapsed() << " s\n" );
 
     }
 
@@ -202,9 +193,6 @@ protected:
 
     /** Runs the M2M kernel. */
     void upwardPass(){
-        FLOG( FLog::Controller.write("\tStart Upward Pass\n").write(FLog::Flush); );
-        FLOG(FTic counterTime);
-        FLOG(FTic computationCounter);
 
         // Start from leal level - 1
         typename OctreeClass::Iterator octreeIterator(tree);
@@ -219,7 +207,6 @@ protected:
 
         // for each levels
         for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
-            FLOG(FTic counterTimeLevel);
             int numberOfCells = 0;
             // for each cells
             do{
@@ -231,7 +218,6 @@ protected:
 
             const int chunkSize = this->getChunkSize(numberOfCells);
 
-            FLOG(computationCounter.tic());
             #pragma omp parallel num_threads(MaxThreads)
             {
                 KernelClass * const myThreadkernels = kernels[omp_get_thread_num()];
@@ -243,13 +229,9 @@ protected:
                 }
             }
 
-            FLOG(computationCounter.tac());
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
 
-        FLOG( FLog::Controller << "\tFinished (@Upward Pass (M2M) = "  << counterTime.tacAndElapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << computationCounter.cumulated() << " s\n" );
 
     }
 
@@ -270,9 +252,6 @@ protected:
     /** Runs the M2L kernel. */
     void transferPassWithFinalize(){
 
-        FLOG( FLog::Controller.write("\tStart Downward Pass (M2L)\n").write(FLog::Flush); );
-        FLOG(FTic counterTime);
-        FLOG(FTic computationCounter);
 
         typename OctreeClass::Iterator octreeIterator(tree);
         octreeIterator.moveDown();
@@ -285,7 +264,6 @@ protected:
 
         // for each levels
         for(int idxLevel = FAbstractAlgorithm::upperWorkingLevel ; idxLevel < FAbstractAlgorithm::lowerWorkingLevel ; ++idxLevel ){
-            FLOG(FTic counterTimeLevel);
             const int separationCriteria = (idxLevel != FAbstractAlgorithm::lowerWorkingLevel-1 ? 1 : leafLevelSeparationCriteria);
             int numberOfCells = 0;
             // for each cells
@@ -298,7 +276,6 @@ protected:
 
             const int chunkSize = this->getChunkSize(numberOfCells);
 
-            FLOG(computationCounter.tic());
             #pragma omp parallel num_threads(MaxThreads)
             {
                 KernelClass * const myThreadkernels = kernels[omp_get_thread_num()];
@@ -313,12 +290,8 @@ protected:
 
                 myThreadkernels->finishedLevelM2L(idxLevel);
             }  //Synchro end of parallel section
-            FLOG(computationCounter.tac());
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
-        FLOG( FLog::Controller << "\tFinished (@Downward Pass (M2L) = "  << counterTime.tacAndElapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << computationCounter.cumulated() << " s\n" );
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -328,9 +301,6 @@ protected:
     /** Runs the L2L kernel. */
     void downardPass(){
 
-        FLOG( FLog::Controller.write("\tStart Downward Pass (L2L)\n").write(FLog::Flush); );
-        FLOG(FTic counterTime);
-        FLOG(FTic computationCounter);
 
         typename OctreeClass::Iterator octreeIterator(tree);
         octreeIterator.moveDown();
@@ -344,7 +314,6 @@ protected:
         const int heightMinusOne = FAbstractAlgorithm::lowerWorkingLevel - 1;
         // for each levels excepted leaf level
         for(int idxLevel = FAbstractAlgorithm::upperWorkingLevel ; idxLevel < heightMinusOne ; ++idxLevel ){
-            FLOG(FTic counterTimeLevel);
             int numberOfCells = 0;
             // for each cells
             do{
@@ -354,7 +323,6 @@ protected:
             avoidGotoLeftIterator.moveDown();
             octreeIterator = avoidGotoLeftIterator;
 
-            FLOG(computationCounter.tic());
             const int chunkSize = this->getChunkSize(numberOfCells);
             #pragma omp parallel num_threads(MaxThreads)
             {
@@ -364,12 +332,8 @@ protected:
                     myThreadkernels->L2L( iterArray[idxCell].getCurrentCell() , iterArray[idxCell].getCurrentChild(), idxLevel);
                 }
             }
-            FLOG(computationCounter.tac());
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
-        FLOG( FLog::Controller << "\tFinished (@Downward Pass (L2L) = "  << counterTime.tacAndElapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << computationCounter.cumulated() << " s\n" );
     }
 
 
@@ -384,10 +348,6 @@ protected:
      * \param l2pEnabled Run the L2P kernel.
      */
     void directPass(const bool p2pEnabled, const bool l2pEnabled){
-        FLOG( FLog::Controller.write("\tStart Direct Pass\n").write(FLog::Flush); );
-        FLOG(FTic counterTime);
-        FLOG(FTic computationCounter);
-        FLOG(FTic computationCounterP2P);
 
         omp_lock_t lockShape[SizeShape];
         for(int idxShape = 0 ; idxShape < SizeShape ; ++idxShape){
@@ -444,7 +404,6 @@ protected:
 
             #pragma omp barrier
 
-            FLOG(if(!omp_get_thread_num()) computationCounter.tic());
 
             KernelClass& myThreadkernels = (*kernels[omp_get_thread_num()]);
             // There is a maximum of 26 neighbors
@@ -463,11 +422,9 @@ protected:
                     }
                     if(p2pEnabled){
                         // need the current particles and neighbors particles
-                        FLOG(if(!omp_get_thread_num()) computationCounterP2P.tic());
                         const int counter = tree->getLeafsNeighbors(neighbors, neighborPositions, currentIter.cell->getCoordinate(), OctreeHeight-1);
                         myThreadkernels.P2P(currentIter.cell->getCoordinate(), currentIter.targets,
                                             currentIter.sources, neighbors, neighborPositions, counter);
-                        FLOG(if(!omp_get_thread_num()) computationCounterP2P.tac());
                     }
                 }
 
@@ -475,7 +432,6 @@ protected:
             }
         }
 
-        FLOG(computationCounter.tac());
 
         delete [] leafsDataArray;
         for(int idxShape = 0 ; idxShape < SizeShape ; ++idxShape){
@@ -483,9 +439,6 @@ protected:
         }
 
 
-        FLOG( FLog::Controller << "\tFinished (@Direct Pass (L2P + P2P) = "  << counterTime.tacAndElapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation L2P + P2P : " << computationCounter.cumulated()    << " s\n" );
-        FLOG( FLog::Controller << "\t\t Computation P2P :       " << computationCounterP2P.cumulated() << " s\n" );
 
     }
 

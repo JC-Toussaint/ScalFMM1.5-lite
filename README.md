@@ -49,8 +49,8 @@ Installe `include/<Core|Containers|Components|Kernels|Utils|Extensions>/...`,
 `include/ScalFmmConfig.h` et `lib/libscalfmm.a` (même disposition que ScalFMM 1.5).
 
 Options : `SCALFMM_USE_AVX` (ON), `SCALFMM_USE_SSE` (OFF), `SCALFMM_USE_NATIVE`
-(`-march=native`, ON), `SCALFMM_USE_ASSERT` (ON), `SCALFMM_USE_LOG` (OFF),
-`SCALFMM_USE_MEM_STATS` (OFF), `SCALFMM_BLAS_MANGLING` (`ADD_`), `SCALFMM_BUILD_TESTS` (ON).
+(`-march=native`, ON), `SCALFMM_USE_ASSERT` (ON),
+`SCALFMM_BLAS_MANGLING` (`ADD_`), `SCALFMM_BUILD_TESTS` (ON).
 
 ## Licence
 

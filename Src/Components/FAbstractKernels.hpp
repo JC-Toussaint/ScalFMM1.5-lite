@@ -4,7 +4,6 @@
 
 
 #include "Utils/FGlobal.hpp"
-#include "Utils/FLog.hpp"
 #include "Containers/FTreeCoordinate.hpp"
 
 /**
@@ -204,7 +203,6 @@ public:
                            ContainerClass* const FRestrict /*targets*/, const ContainerClass* const FRestrict /*sources*/,
                            const ContainerClass* const /*directNeighborsParticles*/[],
                            const int /*neighborPositions*/[], const int /*size*/) {
-        FLOG( FLog::Controller.write("Warning, P2P remote is used but not implemented!").write(FLog::Flush) );
     }
 
 };

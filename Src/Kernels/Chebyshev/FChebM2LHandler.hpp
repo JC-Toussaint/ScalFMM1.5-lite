@@ -2,6 +2,7 @@
 #ifndef FCHEBM2LHANDLER_HPP
 #define FCHEBM2LHANDLER_HPP
 
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <string>

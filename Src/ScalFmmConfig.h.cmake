@@ -7,9 +7,7 @@
 // Debug
 ///////////////////////////////////////////////////////
 
-#cmakedefine SCALFMM_USE_LOG
 #cmakedefine SCALFMM_USE_ASSERT
-#cmakedefine SCALFMM_USE_MEM_STATS
 
 ///////////////////////////////////////////////////////
 // Blas / Lapack (required by the Chebyshev kernel)

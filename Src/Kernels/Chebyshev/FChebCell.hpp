@@ -2,6 +2,7 @@
 
 #ifndef FCHEBCELL_HPP
 #define FCHEBCELL_HPP
+#include <cstring>
 #include <iostream>
 
 #include "../../Components/FBasicCell.hpp"

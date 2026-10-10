@@ -2,12 +2,12 @@
 #ifndef FOCTREE_HPP
 #define FOCTREE_HPP
 
+#include <cstring>
 #include <functional>
 
 #include "FSubOctree.hpp"
 #include "FTreeCoordinate.hpp"
 
-#include "Utils/FLog.hpp"
 #include "../Utils/FGlobal.hpp"
 #include "../Utils/FGlobalPeriodic.hpp"
 #include "../Utils/FPoint.hpp"

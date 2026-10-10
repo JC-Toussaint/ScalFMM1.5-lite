@@ -2,6 +2,8 @@
 #ifndef FCHEBSYMM2LHANDLER_HPP
 #define FCHEBSYMM2LHANDLER_HPP
 
+#include <iostream>
+#include <string>
 #include <climits>
 #include <sstream>
 

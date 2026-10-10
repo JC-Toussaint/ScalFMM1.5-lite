@@ -3,7 +3,6 @@
 #define FABSTRACTPARTICLECONTAINER_HPP
 
 #include "../Utils/FGlobal.hpp"
-#include "../Utils/FLog.hpp"
 #include "../Utils/FPoint.hpp"
 
 /**
@@ -30,7 +29,6 @@ public:
      */
     template<typename... Args>
     void push(const FPoint<FReal>& /*inParticlePosition*/, Args ... /*args*/){
-        FLOG( FLog::Controller.write("Warning, push is not implemented!").write(FLog::Flush) );
     }
 };
 

@@ -3,7 +3,6 @@
 #define FABSTRACTLEAF_HPP
 
 #include "../Utils/FPoint.hpp"
-#include "../Utils/FLog.hpp"
 
 /**
 * @author Berenger Bramas (berenger.bramas@inria.fr)
@@ -28,7 +27,6 @@ public:
         */
     template<typename... Args>
     void push(const FPoint<FReal>& /*inParticlePosition*/, Args ... /*args*/){
-        FLOG( FLog::Controller.write("Warning, push is not implemented!").write(FLog::Flush) );
     }
 
     /**

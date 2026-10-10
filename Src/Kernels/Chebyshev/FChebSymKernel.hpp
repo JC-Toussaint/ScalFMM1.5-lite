@@ -2,6 +2,8 @@
 #define FCHEBSYMKERNEL_HPP
 // See LICENCE file at project root
 
+#include <cstring>
+#include <iostream>
 #include "Utils/FGlobal.hpp"
 
 #include <memory>

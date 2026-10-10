@@ -3,6 +3,7 @@
 #define FSUBOCTREE_HPP
 
 
+#include <cstring>
 #include "../Utils/FGlobal.hpp"
 #include "../Utils/FPoint.hpp"
 #include "../Utils/FAssert.hpp"

@@ -4,7 +4,6 @@
 
 
 #include "../Utils/FAssert.hpp"
-#include "../Utils/FLog.hpp"
 
 #include "../Utils/FTic.hpp"
 
@@ -34,8 +33,6 @@ class FFmmAlgorithmTsm : public FAbstractAlgorithm{
 
     const int leafLevelSeparationCriteria;
 
-    FLOG(FTic counterTime);                                               //< In case of debug: to count the elapsed time
-    FLOG(FTic computationCounter);                                        //< In case of debug: to  count computation time
 
 public:
     /** The constructor need the octree and the kernels used for computation
@@ -52,7 +49,6 @@ public:
 
         FAbstractAlgorithm::setNbLevelsInTree(tree->getHeight());
 
-        FLOG(FLog::Controller << "FFmmAlgorithmTsm\n");
     }
 
     /** Default destructor */
@@ -79,9 +75,6 @@ protected:
 
     /** P2M */
     void bottomPass(){
-        FLOG( FLog::Controller.write("\tStart Bottom Pass\n").write(FLog::Flush) );
-        FLOG( counterTime.tic() );
-        FLOG( double totalComputation = 0 );
 
         typename OctreeClass::Iterator octreeIterator(tree);
 
@@ -90,7 +83,6 @@ protected:
         do{
             // We need the current cell that represent the leaf
             // and the list of particles
-            FLOG(computationCounter.tic());
             ContainerClass* const sources = octreeIterator.getCurrentListSrc();
             if(sources->getNbParticles()){
                 octreeIterator.getCurrentCell()->setSrcChildTrue();
@@ -99,21 +91,13 @@ protected:
             if(octreeIterator.getCurrentListTargets()->getNbParticles()){
                 octreeIterator.getCurrentCell()->setTargetsChildTrue();
             }
-            FLOG(computationCounter.tac());
-            FLOG(totalComputation += computationCounter.elapsed());
         } while(octreeIterator.moveRight());
 
-        FLOG( counterTime.tac() );
-        FLOG( FLog::Controller << "\tFinished (@Bottom Pass (P2M) = "  << counterTime.elapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << totalComputation << " s\n" );
 
     }
 
     /** M2M */
     void upwardPass(){
-        FLOG( FLog::Controller.write("\tStart Upward Pass\n").write(FLog::Flush); );
-        FLOG( counterTime.tic() );
-        FLOG( double totalComputation = 0 );
 
         // Start from leal level - 1
         typename OctreeClass::Iterator octreeIterator(tree);
@@ -128,12 +112,10 @@ protected:
 
         // for each levels
         for(int idxLevel = FMath::Min(OctreeHeight - 2, FAbstractAlgorithm::lowerWorkingLevel - 1) ; idxLevel >= FAbstractAlgorithm::upperWorkingLevel ; --idxLevel ){
-            FLOG(FTic counterTimeLevel);
             // for each cells
             do{
                 // We need the current cell and the child
                 // child is an array (of 8 child) that may be null
-                FLOG(computationCounter.tic());
 
                 CellClass* potentialChild[8];
                 CellClass** const realChild = octreeIterator.getCurrentChild();
@@ -152,26 +134,17 @@ protected:
                 }
                 kernels->M2M( currentCell , potentialChild, idxLevel);
 
-                FLOG(computationCounter.tac());
-                FLOG(totalComputation += computationCounter.elapsed());
             } while(octreeIterator.moveRight());
 
             avoidGotoLeftIterator.moveUp();
             octreeIterator = avoidGotoLeftIterator;// equal octreeIterator.moveUp(); octreeIterator.gotoLeft();
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
-        FLOG( counterTime.tac() );
-        FLOG( FLog::Controller << "\tFinished (@Upward Pass (M2M) = "  << counterTime.elapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << totalComputation << " s\n" );
 
     }
 
     /** M2L */
     void transferPass(){
-        FLOG( FLog::Controller.write("\tStart Downward Pass (M2L)\n").write(FLog::Flush); );
-        FLOG( counterTime.tic() );
-        FLOG( double totalComputation = 0 );
 
         typename OctreeClass::Iterator octreeIterator(tree);
         octreeIterator.moveDown();
@@ -187,11 +160,9 @@ protected:
 
         // for each levels
         for(int idxLevel = FAbstractAlgorithm::upperWorkingLevel ; idxLevel < FAbstractAlgorithm::lowerWorkingLevel ; ++idxLevel ){
-            FLOG(FTic counterTimeLevel);
             const int separationCriteria = (idxLevel != FAbstractAlgorithm::lowerWorkingLevel-1 ? 1 : leafLevelSeparationCriteria);
             // for each cells
             do{
-                FLOG(computationCounter.tic());
                 CellClass* const currentCell = octreeIterator.getCurrentCell();
 
                 if(currentCell->hasTargetsChild()){
@@ -210,29 +181,18 @@ protected:
                         }
                     }
                 }
-                FLOG(computationCounter.tac());
-                FLOG(totalComputation += computationCounter.elapsed());
             } while(octreeIterator.moveRight());
 
-            FLOG(computationCounter.tic());
             kernels->finishedLevelM2L(idxLevel);
-            FLOG(computationCounter.tac());
 
             avoidGotoLeftIterator.moveDown();
             octreeIterator = avoidGotoLeftIterator;
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
-        FLOG( counterTime.tac() );
-        FLOG( FLog::Controller << "\tFinished (@Downward Pass (M2L) = "  << counterTime.elapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << totalComputation << " s\n" );
     }
 
     /** L2L */
     void downardPass(){
-        FLOG( FLog::Controller.write("\tStart Downward Pass (L2L)\n").write(FLog::Flush); );
-        FLOG( counterTime.tic() );
-        FLOG( double totalComputation = 0 );
 
         typename OctreeClass::Iterator octreeIterator(tree);
         octreeIterator.moveDown();
@@ -246,11 +206,9 @@ protected:
         const int heightMinusOne = FAbstractAlgorithm::lowerWorkingLevel - 1;
         // for each levels exepted leaf level
         for(int idxLevel = FAbstractAlgorithm::upperWorkingLevel ; idxLevel < heightMinusOne ; ++idxLevel ){
-            FLOG(FTic counterTimeLevel);
             // for each cells
             do{
                 if( octreeIterator.getCurrentCell()->hasTargetsChild() ){
-                    FLOG(computationCounter.tic());
                     CellClass* potentialChild[8];
                     CellClass** const realChild = octreeIterator.getCurrentChild();
                     CellClass* const currentCell = octreeIterator.getCurrentCell();
@@ -263,28 +221,19 @@ protected:
                         }
                     }
                     kernels->L2L( currentCell , potentialChild, idxLevel);
-                    FLOG(computationCounter.tac());
-                    FLOG(totalComputation += computationCounter.elapsed());
                 }
             } while(octreeIterator.moveRight());
 
             avoidGotoLeftIterator.moveDown();
             octreeIterator = avoidGotoLeftIterator;
-            FLOG( FLog::Controller << "\t\t>> Level " << idxLevel << " = "  << counterTimeLevel.tacAndElapsed() << " s\n" );
         }
 
-        FLOG( counterTime.tac() );
-        FLOG( FLog::Controller << "\tFinished (@Downward Pass (L2L) = "  << counterTime.elapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation : " << totalComputation << " s\n" );
     }
 
 
 
     /** P2P */
     void directPass(const bool p2pEnabled, const bool l2pEnabled){
-        FLOG( FLog::Controller.write("\tStart Direct Pass\n").write(FLog::Flush); );
-        FLOG( counterTime.tic() );
-        FLOG( double totalComputation = 0 );
 
         const int heightMinusOne = OctreeHeight - 1;
 
@@ -296,7 +245,6 @@ protected:
         // for each leafs
         do{
             if( octreeIterator.getCurrentCell()->hasTargetsChild() ){
-                FLOG(computationCounter.tic());
                 if(l2pEnabled){
                     kernels->L2P(octreeIterator.getCurrentCell(), octreeIterator.getCurrentListTargets());
                 }
@@ -310,14 +258,9 @@ protected:
                     kernels->P2PRemote( octreeIterator.getCurrentGlobalCoordinate(), octreeIterator.getCurrentListTargets(),
                               octreeIterator.getCurrentListSrc() , neighbors, neighborPositions, counter);
                 }
-                FLOG(computationCounter.tac());
-                FLOG(totalComputation += computationCounter.elapsed());
             }
         } while(octreeIterator.moveRight());
 
-        FLOG( counterTime.tac() );
-        FLOG( FLog::Controller << "\tFinished (@Direct Pass (L2P + P2P) = "  << counterTime.elapsed() << " s)\n" );
-        FLOG( FLog::Controller << "\t\t Computation L2P + P2P : " << totalComputation << " s\n" );
 
     }
 
