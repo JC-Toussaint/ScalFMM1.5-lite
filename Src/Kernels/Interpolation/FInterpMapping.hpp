@@ -5,7 +5,6 @@
 #include <iostream>
 #include <limits>
 
-#include "../../Utils/FNoCopyable.hpp"
 #include "../../Utils/FPoint.hpp"
 
 /**
@@ -21,8 +20,11 @@
  * \f$\Phi^{-1}:[a,b]\rightarrow[-1,1]\f$.
  */
 template <class FReal>
-class FInterpMapping : FNoCopyable
+class FInterpMapping
 {
+    FInterpMapping(const FInterpMapping&) = delete;              // not copyable
+    FInterpMapping& operator=(const FInterpMapping&) = delete;
+
 protected:
     FPoint<FReal> a;
     FPoint<FReal> b;

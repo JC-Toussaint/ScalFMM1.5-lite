@@ -28,8 +28,11 @@
  * matrix kernel class of type ONE_OVER_R (NRHS=NLHS=1).
  */
 template <class FReal, int ORDER, class MatrixKernelClass = struct FInterpMatrixKernelR<FReal>, int NVALS = 1>
-class FChebInterpolator : FNoCopyable
+class FChebInterpolator
 {
+    FChebInterpolator(const FChebInterpolator&) = delete;              // not copyable
+    FChebInterpolator& operator=(const FChebInterpolator&) = delete;
+
     // compile time constants and types
     enum {nnodes = TensorTraits<ORDER>::nnodes,
           nRhs = MatrixKernelClass::NRHS,

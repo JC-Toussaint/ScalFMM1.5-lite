@@ -5,7 +5,7 @@
 #include "Components/FAbstractKernels.hpp"
 #include <memory>
 #include "Utils/FComplex.hpp"
-#include "Utils/FMemUtils.hpp"
+#include <algorithm>
 #include "Utils/FSpherical.hpp"
 #include "Utils/FMath.hpp"
 #include "Utils/FAssert.hpp"
@@ -320,12 +320,8 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                 // for l < P
                 for(int l = 0 ; l < P ; ++l){
                     // take the l + 1 numbers from the vector with l' = P
-                    FMemUtils::copyall(rotationExpMinusImPhi[idxChild] + index_lm,
-                                       rotationExpMinusImPhi[idxChild] + index_P0,
-                                       l + 1);
-                    FMemUtils::copyall(rotationExpImPhi[idxChild] + index_lm,
-                                       rotationExpImPhi[idxChild] + index_P0,
-                                       l + 1);
+                    std::copy_n(rotationExpMinusImPhi[idxChild] + index_P0, l + 1, rotationExpMinusImPhi[idxChild] + index_lm);
+                    std::copy_n(rotationExpImPhi[idxChild] + index_P0, l + 1, rotationExpImPhi[idxChild] + index_lm);
                     // index(l+1,0) = index(l,0) + l + 1
                     index_lm += l + 1;
                 }
@@ -417,12 +413,8 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
                         {
                             int index_lm = 0;
                             for(int l = 0 ; l < P ; ++l){
-                                FMemUtils::copyall(rotationM2LExpMinusImPhi[position] + index_lm,
-                                                   rotationM2LExpMinusImPhi[position] + index_P0,
-                                                   l + 1);
-                                FMemUtils::copyall(rotationM2LExpImPhi[position] + index_lm,
-                                                   rotationM2LExpImPhi[position] + index_P0,
-                                                   l + 1);
+                                std::copy_n(rotationM2LExpMinusImPhi[position] + index_P0, l + 1, rotationM2LExpMinusImPhi[position] + index_lm);
+                                std::copy_n(rotationM2LExpImPhi[position] + index_P0, l + 1, rotationM2LExpImPhi[position] + index_lm);
                                 index_lm += l + 1;
                             }
                         }
@@ -793,7 +785,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
       */
     static void RotationYWithDlmk(FComplex<FReal> vec[], const FReal* dlmkCoef){
         FReal originalVec[2*SizeArray];
-        FMemUtils::copyall((FComplex<FReal>*)originalVec,vec,SizeArray);
+        std::copy_n(vec, SizeArray, (FComplex<FReal>*)originalVec);
         // index_lm == atLm(l,m) but progress iteratively to write the result
         int index_lm = 0;
         for(int l = 0 ; l <= P ; ++l){
@@ -968,7 +960,7 @@ public:
             // if child exists
             if(inChildren[idxChild]){
                 // Copy the source
-                FMemUtils::copyall(source_w, inChildren[idxChild]->getMultipole(), SizeArray);
+                std::copy_n(inChildren[idxChild]->getMultipole(), SizeArray, source_w);
 
                 // rotate it forward
                 RotationZVectorsMul(source_w,rotationExpMinusImPhi[idxChild]);
@@ -998,7 +990,7 @@ public:
                 RotationZVectorsMul(target_w,rotationExpImPhi[idxChild]);
 
                 // Sum the result
-                FMemUtils::addall( inPole->getMultipole(), target_w, SizeArray);
+                std::transform(inPole->getMultipole(), inPole->getMultipole() + SizeArray, target_w, inPole->getMultipole(), [](FComplex<FReal> a, const FComplex<FReal>& b) { return a += b; });
             }
         }
     }
@@ -1023,7 +1015,7 @@ public:
             if(inInteractions[idxNeigh]){
                 const FReal*const coef = M2LTranslationCoef[inLevel][idxNeigh];
                 // Copy multipole data into buffer
-                FMemUtils::copyall(source_w, inInteractions[idxNeigh]->getMultipole(), SizeArray);
+                std::copy_n(inInteractions[idxNeigh]->getMultipole(), SizeArray, source_w);
 
                 // Rotate
                 RotationZVectorsMul(source_w,rotationM2LExpMinusImPhi[idxNeigh]);
@@ -1056,7 +1048,7 @@ public:
                 RotationZVectorsMul(target_u,rotationM2LExpMinusImPhi[idxNeigh]);
 
                 // Sum
-                FMemUtils::addall(inLocal->getLocal(), target_u, SizeArray);
+                std::transform(inLocal->getLocal(), inLocal->getLocal() + SizeArray, target_u, inLocal->getLocal(), [](FComplex<FReal> a, const FComplex<FReal>& b) { return a += b; });
             }
         }
     }
@@ -1071,7 +1063,7 @@ public:
             // if interaction exits
             const FReal*const coef = M2LTranslationCoef[inLevel][idxNeigh];
             // Copy multipole data into buffer
-            FMemUtils::copyall(source_w, inInteractions[idxExistingNeigh]->getMultipole(), SizeArray);
+            std::copy_n(inInteractions[idxExistingNeigh]->getMultipole(), SizeArray, source_w);
 
             // Rotate
             RotationZVectorsMul(source_w,rotationM2LExpMinusImPhi[idxNeigh]);
@@ -1104,7 +1096,7 @@ public:
             RotationZVectorsMul(target_u,rotationM2LExpMinusImPhi[idxNeigh]);
 
             // Sum
-            FMemUtils::addall(inLocal->getLocal(), target_u, SizeArray);
+            std::transform(inLocal->getLocal(), inLocal->getLocal() + SizeArray, target_u, inLocal->getLocal(), [](FComplex<FReal> a, const FComplex<FReal>& b) { return a += b; });
         }
     }
 
@@ -1129,7 +1121,7 @@ public:
             // if child exists
             if(inChildren[idxChild]){
                 // Copy the local data into the buffer
-                FMemUtils::copyall(source_u, inLocal->getLocal(), SizeArray);
+                std::copy_n(inLocal->getLocal(), SizeArray, source_u);
 
                 // Rotate
                 RotationZVectorsMul(source_u,rotationExpImPhi[idxChild]);
@@ -1158,7 +1150,7 @@ public:
                 RotationZVectorsMul(target_u,rotationExpMinusImPhi[idxChild]);
 
                 // Sum in child
-                FMemUtils::addall(inChildren[idxChild]->getLocal(), target_u, SizeArray);
+                std::transform(inChildren[idxChild]->getLocal(), inChildren[idxChild]->getLocal() + SizeArray, target_u, inChildren[idxChild]->getLocal(), [](FComplex<FReal> a, const FComplex<FReal>& b) { return a += b; });
             }
         }
     }

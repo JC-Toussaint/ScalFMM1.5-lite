@@ -38,8 +38,14 @@ template <int ORDER> struct TensorTraits
 
  */
 template <class FReal, int ORDER, typename RootsClass>
-class FInterpTensor : FNoCopyable
+class FInterpTensor
 {
+ public:
+    FInterpTensor() = default;
+    FInterpTensor(const FInterpTensor&) = delete;              // not copyable
+    FInterpTensor& operator=(const FInterpTensor&) = delete;
+ private:
+
   enum {nnodes = TensorTraits<ORDER>::nnodes};
   typedef RootsClass BasisType;
 

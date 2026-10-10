@@ -13,7 +13,6 @@
 #include "../Utils/FGlobalPeriodic.hpp"
 #include "../Utils/FPoint.hpp"
 #include "../Utils/FMath.hpp"
-#include "../Utils/FNoCopyable.hpp"
 #include "../Utils/FAssert.hpp"
 #include "FCoordinateComputer.hpp"
 
@@ -39,7 +38,11 @@
  * CellAllocator can be FListBlockAllocator<CellClass, 10> or FBasicBlockAllocator<CellClass>
  */
 template<class FReal, class CellClass, class ContainerClass, class LeafClass, class CellAllocatorClass = FBasicBlockAllocator<CellClass> /*FListBlockAllocator<CellClass, 15>*/ >
-class FOctree : public FNoCopyable {
+class FOctree
+{
+    FOctree(const FOctree&) = delete;              // not copyable
+    FOctree& operator=(const FOctree&) = delete;
+
 public:
     using FRealType = FReal;
     using CellClassType = CellClass;

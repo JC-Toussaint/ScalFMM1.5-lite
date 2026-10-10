@@ -3,7 +3,7 @@
 #define FROTATIONCELL_HPP
 
 #include "../../Utils/FComplex.hpp"
-#include "../../Utils/FMemUtils.hpp"
+#include <algorithm>
 
 #include "../../Extensions/FExtendCellType.hpp"
 
@@ -55,8 +55,8 @@ public:
       * copies only the value in the vectors
       */
     FRotationCell& operator=(const FRotationCell& other) {
-        FMemUtils::copyall(multipole_exp, other.multipole_exp, MultipoleSize);
-        FMemUtils::copyall(local_exp, other.local_exp, LocalSize);
+        std::copy_n(other.multipole_exp, MultipoleSize, multipole_exp);
+        std::copy_n(other.local_exp, LocalSize, local_exp);
         return *this;
     }
 

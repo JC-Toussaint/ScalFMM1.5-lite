@@ -7,7 +7,6 @@
 #include <cassert>
 #include <array>
 
-#include "../../Utils/FNoCopyable.hpp"
 
 
 /**
@@ -25,8 +24,12 @@
  * @tparam ORDER interpolation order \f$\ell\f$
  */
 template <class FReal, int ORDER>
-struct FChebRoots : FNoCopyable
+struct FChebRoots
 {
+    FChebRoots() = default;
+    FChebRoots(const FChebRoots&) = delete;              // not copyable
+    FChebRoots& operator=(const FChebRoots&) = delete;
+
     enum {order = ORDER}; //!< interpolation order
 
     /**

@@ -6,7 +6,6 @@
 #include <stdexcept>
 
 #include "Utils/FPoint.hpp"
-#include "Utils/FNoCopyable.hpp"
 #include "Utils/FMath.hpp"
 #include "Utils/FGlobal.hpp"
 
@@ -40,8 +39,12 @@ enum KERNEL_FUNCTION_TYPE {HOMOGENEOUS, NON_HOMOGENEOUS};
  *
  */
 template <class FReal>
-struct FInterpAbstractMatrixKernel : FNoCopyable
-{ 
+struct FInterpAbstractMatrixKernel
+{
+    FInterpAbstractMatrixKernel() = default;
+    FInterpAbstractMatrixKernel(const FInterpAbstractMatrixKernel&) = delete;              // not copyable
+    FInterpAbstractMatrixKernel& operator=(const FInterpAbstractMatrixKernel&) = delete;
+ 
     virtual ~FInterpAbstractMatrixKernel(){} // to remove warning
     //virtual FReal evaluate(const FPoint<FReal>&, const FPoint<FReal>&) const = 0;
     // I need both functions because required arguments are not always given

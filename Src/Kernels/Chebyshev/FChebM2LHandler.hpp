@@ -51,8 +51,11 @@ unsigned int Compress(const FReal epsilon, const unsigned int ninteractions,
  * @tparam ORDER interpolation order \f$\ell\f$
  */
 template <class FReal, int ORDER, class MatrixKernelClass>
-class FChebM2LHandler : FNoCopyable
+class FChebM2LHandler
 {
+    FChebM2LHandler(const FChebM2LHandler&) = delete;              // not copyable
+    FChebM2LHandler& operator=(const FChebM2LHandler&) = delete;
+
 	enum {order = ORDER,
 				nnodes = TensorTraits<ORDER>::nnodes,
 				ninteractions = 316}; // 7^3 - 3^3 (max num cells in far-field)

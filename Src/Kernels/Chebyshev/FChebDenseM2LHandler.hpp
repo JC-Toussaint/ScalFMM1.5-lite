@@ -40,8 +40,11 @@
  * @tparam ORDER interpolation order \f$\ell\f$
  */
 template <class FReal, int ORDER, class MatrixKernelClass>
-class FChebDenseM2LHandler : FNoCopyable
+class FChebDenseM2LHandler
 {
+    FChebDenseM2LHandler(const FChebDenseM2LHandler&) = delete;              // not copyable
+    FChebDenseM2LHandler& operator=(const FChebDenseM2LHandler&) = delete;
+
 	enum {order = ORDER,
 				nnodes = TensorTraits<ORDER>::nnodes,
 				ninteractions = 316}; // 7^3 - 3^3 (max num cells in far-field)
