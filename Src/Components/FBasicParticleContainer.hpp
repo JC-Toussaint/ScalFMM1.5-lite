@@ -4,12 +4,12 @@
 
 #include <array>
 #include <algorithm>
+#include <new>
 
 #include "FAbstractParticleContainer.hpp"
 #include "FAbstractSerializable.hpp"
 
 #include "Utils/FGlobal.hpp"
-#include "Utils/FAlignedMemory.hpp"
 #include "Utils/FMath.hpp"
 #include "Utils/FPoint.hpp"
 #include "FParticleType.hpp"
@@ -47,6 +47,14 @@ class FBasicParticleContainer : public FAbstractParticleContainer<FReal>, public
 protected:
     static const FSize MemoryAlignement   = FP2PDefaultAlignement;
     static const FSize DefaultNbParticles = FSize(MemoryAlignement/sizeof(FReal));
+
+    /** aligned allocation (positions and attributes in one block) */
+    static FReal* allocateBytes(const size_t nbBytes){
+        return static_cast<FReal*>(::operator new(nbBytes, std::align_val_t(MemoryAlignement)));
+    }
+    static void deallocateBytes(const void* ptr){
+        ::operator delete(const_cast<void*>(ptr), std::align_val_t(MemoryAlignement));
+    }
 
     /** The number of particles in the container */
     FSize nbParticles;
@@ -110,7 +118,7 @@ protected:
             allocatedParticles = (FMath::Max(DefaultNbParticles,FSize(FReal(nbParticles+sizeInput)*1.5)) + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
             // init with 0
             const size_t allocatedBytes = (sizeof(FReal)*3 + sizeof(AttributeClass)*NbAttributesPerParticle)*allocatedParticles;
-            FReal* newData  = reinterpret_cast<FReal*>(FAlignedMemory::AllocateBytes<MemoryAlignement>(allocatedBytes));
+            FReal* newData  = allocateBytes(allocatedBytes);
             memset( newData, 0, allocatedBytes);
             // copy memory
             const char*const toDelete  = reinterpret_cast<const char*>(positions[0]);
@@ -128,7 +136,7 @@ protected:
                 attributes[idx] = startAddress + (idx * allocatedParticles);
             }
             // delete old
-            FAlignedMemory::DeallocBytes(toDelete);
+            deallocateBytes(toDelete);
         }
     }
 
@@ -136,30 +144,7 @@ public:
     /////////////////////////////////////////////////////
     /////////////////////////////////////////////////////
 
-  FBasicParticleContainer( FBasicParticleContainer& leaf) : nbParticles(leaf.nbParticles),allocatedParticles(leaf.allocatedParticles) 
-  {
-    // allocate memory
-    const FSize moduloParticlesNumber = (MemoryAlignement/sizeof(FReal));
-    allocatedParticles = (nbParticles + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
-    // init with 0
-    const size_t allocatedBytes = (sizeof(FReal)*3 + sizeof(AttributeClass)*NbAttributesPerParticle)*allocatedParticles;
-
-    FReal* newData  = reinterpret_cast<FReal*>(FAlignedMemory::AllocateBytes<MemoryAlignement>(allocatedBytes));
-    FReal * const oldData = (leaf.getWPositions()[0]);
-    
-    std::copy(oldData,oldData+allocatedBytes,newData) ;
-    //
-    // Fill the structure
-    //
-    for(int idx = 0 ; idx < 3 ; ++idx){
-      positions[idx] = newData + (allocatedParticles * idx);
-    }
-    AttributeClass* startAddress = reinterpret_cast<AttributeClass*>(positions[2] + allocatedParticles);
-    for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-      attributes[idx] = startAddress + (idx * allocatedParticles);
-    }
-  }
-  
+    FBasicParticleContainer(const FBasicParticleContainer&) = delete;   // not copyable
     FBasicParticleContainer& operator=(const FBasicParticleContainer&) = delete;
 
     /////////////////////////////////////////////////////
@@ -174,7 +159,7 @@ public:
     /** Simply dalloc the memory using first pointer
    */
     ~FBasicParticleContainer(){
-        FAlignedMemory::DeallocBytes(positions[0]);
+        deallocateBytes(positions[0]);
     }
 
     /**
@@ -392,10 +377,10 @@ public:
             allocatedParticles = (nbParticles + moduloParticlesNumber - 1) & ~(moduloParticlesNumber-1);
             // init with 0
             const size_t allocatedBytes = (sizeof(FReal)*3 + sizeof(AttributeClass)*NbAttributesPerParticle)*allocatedParticles;
-            FReal* newData  = reinterpret_cast<FReal*>(FAlignedMemory::AllocateBytes<MemoryAlignement>(allocatedBytes));
+            FReal* newData  = allocateBytes(allocatedBytes);
             memset( newData, 0, allocatedBytes);
 
-            FAlignedMemory::DeallocBytes(positions[0]);
+            deallocateBytes(positions[0]);
             for(int idx = 0 ; idx < 3 ; ++idx){
                 positions[idx] = newData + (allocatedParticles * idx);
             }
