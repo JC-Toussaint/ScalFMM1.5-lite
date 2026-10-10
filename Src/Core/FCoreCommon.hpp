@@ -5,6 +5,20 @@
 #include "../Utils/FGlobal.hpp"
 #include "../Utils/FAssert.hpp"
 
+#include <cstdlib>
+#include <omp.h>
+
+/** Number of threads of the threaded algorithms: the environment variable
+    SCALFMM_ALGO_NUM_THREADS if it is a positive integer, else omp_get_max_threads(). */
+inline int FAlgoNumThreads(){
+    if(const char* const value = std::getenv("SCALFMM_ALGO_NUM_THREADS")){
+        char* end = nullptr;
+        const long nbThreads = std::strtol(value, &end, 10);
+        if(end != value && *end == '\0' && nbThreads > 0) return int(nbThreads);
+    }
+    return omp_get_max_threads();
+}
+
 #ifdef SCALFMM_USE_EZTRACE
 extern "C" {
 #include "eztrace.h"

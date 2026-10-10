@@ -4,24 +4,7 @@
 
 #include "FGlobal.hpp"
 
-#define USE_STD_CHRONO
-
-#if defined(USE_STD_CHRONO)
-    #include <chrono>
-#elif defined(_OPENMP)
-    #include <omp.h>
-#elif defined(WINDOWS) // We need an os specific function
-    #include <time.h>
-    #include <windows.h>
-#else
-    #ifndef POSIX
-        #warning Posix used withoug being explicitly defined
-    #endif
-    #include <time.h>
-    #include <sys/time.h>
-    #include <unistd.h>
-    #include <stdint.h>
-#endif
+#include <chrono>
 
 
 /**
@@ -47,9 +30,6 @@
  * timer.cumulated() // time of (1) and (2) in s
  * timer.reset()     // reset the object
  * \endcode
- *
- * The special method that uses asm register is based on code by Alexandre DENIS
- * http://dept-info.labri.fr/~denis/Enseignement/2006-SSECPD/timing.h
  */
 class FTic {
 private:
@@ -138,25 +118,11 @@ public:
         return elapsed();
     }
 
-    /// Get system dependent time point.
-    /** GetTickCount on windows
-     *  gettimeofday on linux or a direct ASM method
-     *  \return A system dependent time point.
-     */
+    /// Current time point (std::chrono), in seconds.
     static double GetTime(){
-#if defined(USE_STD_CHRONO)
         using clock = std::chrono::high_resolution_clock;
         using duration = std::chrono::duration<double>;
         return duration(clock::now().time_since_epoch()).count();
-#elif defined(_OPENMP)
-        return omp_get_wtime();
-#elif defined(WINDOWS)
-        return static_cast<double>(GetTickCount())/1000.0;
-#else // We are in linux/posix
-        timeval t;
-        gettimeofday(&t, NULL);
-        return double(t.tv_sec) + (double(t.tv_usec)/1000000.0);
-#endif
     }
 };
 

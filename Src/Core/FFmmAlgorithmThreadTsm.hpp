@@ -10,7 +10,6 @@
 #include "../Utils/FAlgorithmTimers.hpp"
 #include "../Containers/FOctree.hpp"
 #include "FCoreCommon.hpp"
-#include "../Utils/FEnv.hpp"
 
 #include <omp.h>
 
@@ -51,7 +50,7 @@ public:
       */
     FFmmAlgorithmThreadTsm(OctreeClass* const inTree, KernelClass* const inKernels, const int inLeafLevelSeperationCriteria = 1)
                       : tree(inTree) , kernels(nullptr), iterArray(nullptr),
-                      MaxThreads(FEnv::GetValue("SCALFMM_ALGO_NUM_THREADS",omp_get_max_threads())) , OctreeHeight(tree->getHeight()), leafLevelSeparationCriteria(inLeafLevelSeperationCriteria) {
+                      MaxThreads(FAlgoNumThreads()) , OctreeHeight(tree->getHeight()), leafLevelSeparationCriteria(inLeafLevelSeperationCriteria) {
 
         FAssertLF(tree, "tree cannot be null");
         FAssertLF(leafLevelSeparationCriteria < 3, "Separation criteria should be < 3");

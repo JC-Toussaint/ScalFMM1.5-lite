@@ -46,7 +46,7 @@ public:
         double res = 0;
         try {
             res = Timers.at(TimerName).elapsed();
-        } catch(std::out_of_range) {
+        } catch(const std::out_of_range&) {
             res = 0;
         }
         return res;
