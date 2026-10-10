@@ -3,7 +3,7 @@
 #define FROTATIONKERNEL_HPP
 
 #include "Components/FAbstractKernels.hpp"
-#include "Utils/FSmartPointer.hpp"
+#include <memory>
 #include "Utils/FComplex.hpp"
 #include "Utils/FMemUtils.hpp"
 #include "Utils/FSpherical.hpp"
@@ -53,9 +53,9 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
     FReal factorials[P2+1];             //< This contains the factorial until 2*P+1
 
     ///////////// Translation /////////////////////////////
-    FSmartPointer<FReal[P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
-    FSmartPointer<FReal[343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
-    FSmartPointer<FReal[P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
+    std::shared_ptr<FReal[][P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
+    std::shared_ptr<FReal[][343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
+    std::shared_ptr<FReal[][P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
 
     ///////////// Rotation    /////////////////////////////
     FComplex<FReal> rotationExpMinusImPhi[8][SizeArray];  //< This is the vector use for the rotation around z for the M2M (multipole)
@@ -107,8 +107,8 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
     void precomputeTranslationCoef(){
         {// M2M & L2L
             // Allocate
-            M2MTranslationCoef = new FReal[treeHeight-1][P+1];
-            L2LTranslationCoef = new FReal[treeHeight-1][P+1];
+            M2MTranslationCoef.reset(new FReal[treeHeight-1][P+1]);
+            L2LTranslationCoef.reset(new FReal[treeHeight-1][P+1]);
             // widthAtLevel represents half of the size of a box
             FReal widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
@@ -134,7 +134,7 @@ class FRotationKernel : public FAbstractKernels<CellClass,ContainerClass> {
         }
         {// M2L
             // Allocate
-            M2LTranslationCoef = new FReal[treeHeight][343][P+1];
+            M2LTranslationCoef.reset(new FReal[treeHeight][343][P+1]);
             // This is the width of a box at each level
             FReal boxWidthAtLevel = widthAtLeafLevel;
             // from leaf level to the root

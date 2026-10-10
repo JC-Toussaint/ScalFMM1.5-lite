@@ -4,7 +4,7 @@
 
 #include "../../Utils/FGlobal.hpp"
 
-#include "../../Utils/FSmartPointer.hpp"
+#include <memory>
 
 #include "../../Components/FAbstractKernels.hpp"
 
@@ -34,7 +34,7 @@ protected:
   typedef FChebInterpolator<FReal, ORDER,MatrixKernelClass,NVALS> InterpolatorClass;
 
   /// Needed for P2M, M2M, L2L and L2P operators
-  const FSmartPointer<InterpolatorClass,FSmartPointerMemory> Interpolator;
+  const std::shared_ptr<InterpolatorClass> Interpolator;   // shared by the copies of the kernel (threads)
   /// Height of the entire oct-tree
   const unsigned int TreeHeight;
   /// Corner of oct-tree box
@@ -106,7 +106,7 @@ public:
   }
 
   const InterpolatorClass * getPtrToInterpolator() const
-  { return Interpolator.getPtr(); }
+  { return Interpolator.get(); }
 
 
   virtual void P2M(CellClass* const LeafCell,

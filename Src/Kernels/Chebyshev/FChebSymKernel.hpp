@@ -4,7 +4,7 @@
 
 #include "Utils/FGlobal.hpp"
 
-#include "Utils/FSmartPointer.hpp"
+#include <memory>
 
 #include "FAbstractChebKernel.hpp"
 #include "FChebInterpolator.hpp"
@@ -54,7 +54,7 @@ class FChebSymKernel
     const MatrixKernelClass *const MatrixKernel;
 
     /// Needed for handling all symmetries
-    const FSmartPointer<SymmetryHandlerClass,FSmartPointerMemory> SymHandler;
+    const std::shared_ptr<SymmetryHandlerClass> SymHandler;   // shared by the copies of the kernel (threads)
 
     // permuted local and multipole expansions
     FReal** Loc;
@@ -174,7 +174,7 @@ public:
 
 
     const SymmetryHandlerClass * getPtrToSymHandler() const
-    {   return SymHandler.getPtr(); }
+    {   return SymHandler.get(); }
     
 
 

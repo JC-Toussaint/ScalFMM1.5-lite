@@ -83,7 +83,7 @@ add_library(scalfmm STATIC
   Src/Utils/FMemStats.cpp)
 set_target_properties(scalfmm PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
-target_compile_features(scalfmm PUBLIC cxx_std_14)
+target_compile_features(scalfmm PUBLIC cxx_std_17)
 target_compile_options(scalfmm PUBLIC ${SCALFMM_CXX_FLAGS})
 target_include_directories(scalfmm PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Src>

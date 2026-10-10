@@ -5,7 +5,7 @@
 
 #include "../../Utils/FGlobal.hpp"
 
-#include "../../Utils/FSmartPointer.hpp"
+#include <memory>
 
 #include "./FAbstractChebKernel.hpp"
 
@@ -49,7 +49,7 @@ class FChebDenseKernel
     const MatrixKernelClass *const MatrixKernel;
 
     /// Needed for M2L operator
-    FSmartPointer<  M2LHandlerClass,FSmartPointerMemory> M2LHandler;
+    std::shared_ptr<M2LHandlerClass> M2LHandler;   // shared by the copies of the kernel (threads)
 
 public:
     /**

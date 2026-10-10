@@ -30,7 +30,7 @@ Les autres sources conservées sont identiques à l'original (patch `memcpy` de
 
 ## Dépendances
 
-CMake ≥ 3.16, compilateur C++14, OpenMP, BLAS et LAPACK (requis par Chebyshev).
+CMake ≥ 3.16, compilateur C++17, OpenMP, BLAS et LAPACK (requis par Chebyshev).
 
 BLAS est appelé depuis les threads OpenMP de l'algorithme : il doit être séquentiel.
 Sans `-DBLA_VENDOR=...`, CMake prend OpenBLAS, sinon MKL séquentiel (`Intel10_64lp_seq`),
