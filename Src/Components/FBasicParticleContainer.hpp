@@ -348,39 +348,6 @@ public:
         nbParticles = 0;
     }
 
-    /** to enable rearranging
-   * indexesToRemove must be sorted
-   * it removes all the particles at position indexesToRemove
-   */
-    void removeParticles(const FSize indexesToRemove[], const FSize nbParticlesToRemove){
-        FSize offset = 1;
-        FSize idxIndexes = 1;
-        FSize idxIns = indexesToRemove[0] + 1;
-        for( ; idxIns < nbParticles && idxIndexes < nbParticlesToRemove ; ++idxIns){
-            if( idxIns == indexesToRemove[idxIndexes] ){
-                idxIndexes += 1;
-                offset += 1;
-            }
-            else{
-                for(int idx = 0 ; idx < 3 ; ++idx){
-                    positions[idx][idxIns-offset] = positions[idx][idxIns];
-                }
-                for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-                    attributes[idx][idxIns-offset] = attributes[idx][idxIns];
-                }
-            }
-        }
-        for( ; idxIns < nbParticles ; ++idxIns){
-            for(int idx = 0 ; idx < 3 ; ++idx){
-                positions[idx][idxIns-offset] = positions[idx][idxIns];
-            }
-            for(unsigned idx = 0 ; idx < NbAttributesPerParticle ; ++idx){
-                attributes[idx][idxIns-offset] = attributes[idx][idxIns];
-            }
-        }
-        nbParticles -= nbParticlesToRemove;
-    }
-
     /////////////////////////////////////////////////////
     /////////////////////////////////////////////////////
 

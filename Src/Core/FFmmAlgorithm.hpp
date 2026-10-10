@@ -10,7 +10,6 @@
 #include "../Utils/FTic.hpp"
 
 #include "../Containers/FOctree.hpp"
-#include "../Containers/FVector.hpp"
 #include "../Utils/FAlgorithmTimers.hpp"
 
 #include "FCoreCommon.hpp"
