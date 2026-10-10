@@ -37,13 +37,6 @@ struct FMath{
     }
 
     /** To know if 2 values seems to be equal */
-    template <class NumType>
-    static bool LookEqual(const NumType inV1, const NumType inV2){
-        return (Abs(inV1-inV2) < std::numeric_limits<NumType>::epsilon());
-        //const FReal relTol = FReal(0.00001);
-        //const FReal absTol = FReal(0.00001);
-        //return (Abs(inV1 - inV2) <= Max(absTol, relTol * Max(Abs(inV1), Abs(inV2))));
-    }
 
     /** To get pow */
     static double pow(double x, double y){

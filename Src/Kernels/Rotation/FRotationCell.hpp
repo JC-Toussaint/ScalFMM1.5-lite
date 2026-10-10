@@ -2,7 +2,7 @@
 #ifndef FROTATIONCELL_HPP
 #define FROTATIONCELL_HPP
 
-#include "../../Utils/FComplex.hpp"
+#include <complex>
 #include <algorithm>
 
 #include "../../Extensions/FExtendCellType.hpp"
@@ -29,9 +29,9 @@ protected:
     static const int LocalSize = ((P+2)*(P+1))/2;     // Artimethique suite (n+1)*n/2
 
     //< Multipole vector (static memory)
-    FComplex<FReal> multipole_exp[MultipoleSize]; //< For multipole extenssion
+    std::complex<FReal> multipole_exp[MultipoleSize]; //< For multipole extenssion
     //< Local vector (static memory)
-    FComplex<FReal> local_exp[LocalSize];         //< For local extenssion
+    std::complex<FReal> local_exp[LocalSize];         //< For local extenssion
 
 public:
     /** Default constructor
@@ -61,20 +61,20 @@ public:
     }
 
     /** Get Multipole array */
-    const FComplex<FReal>* getMultipole() const {
+    const std::complex<FReal>* getMultipole() const {
         return multipole_exp;
     }
     /** Get Local array */
-    const FComplex<FReal>* getLocal() const {
+    const std::complex<FReal>* getLocal() const {
         return local_exp;
     }
 
     /** Get Multipole array */
-    FComplex<FReal>* getMultipole() {
+    std::complex<FReal>* getMultipole() {
         return multipole_exp;
     }
     /** Get Local array */
-    FComplex<FReal>* getLocal() {
+    std::complex<FReal>* getLocal() {
         return local_exp;
     }
 
@@ -86,12 +86,8 @@ public:
 
     /** Make it like the begining */
     void resetToInitialState(){
-        for(int idx = 0 ; idx < MultipoleSize ; ++idx){
-            multipole_exp[idx].setRealImag(FReal(0.0), FReal(0.0));
-        }
-        for(int idx = 0 ; idx < LocalSize ; ++idx){
-            local_exp[idx].setRealImag(FReal(0.0), FReal(0.0));
-        }
+        std::fill_n(multipole_exp, MultipoleSize, std::complex<FReal>());
+        std::fill_n(local_exp, LocalSize, std::complex<FReal>());
     }
 
 
