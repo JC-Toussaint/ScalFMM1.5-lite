@@ -1,6 +1,7 @@
 // See LICENCE file at project root
 //
 // Chebyshev interpolation kernel (1/r, symmetric M2L) with typed leaves (targets / sources).
+// Usage: testChebyshevTsm <nTargets> <nSources>   (e.g. 2000 5000)
 
 #include "Components/FTypedLeaf.hpp"
 #include "Containers/FOctree.hpp"
@@ -11,8 +12,11 @@
 
 #include "TsmCheck.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
+    int nTargets, nSources;
+    if (!readParticleCounts(argc, argv, nTargets, nSources)) return EXIT_FAILURE;
+
     typedef double FReal;
     const unsigned int ORDER = 7;
     typedef FTypedChebCell<FReal, ORDER>                                                CellClass;
@@ -29,5 +33,5 @@ int main()
 
     OctreeClass tree(NbLevels, SizeSubLevels, boxWidth, centerOfBox);
     KernelClass kernels(NbLevels, boxWidth, centerOfBox, &MatrixKernel);
-    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=7)", tree, kernels, 1e-5);
+    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=7)", tree, kernels, 1e-5, nTargets, nSources);
 }

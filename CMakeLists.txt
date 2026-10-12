@@ -94,7 +94,7 @@ if(SCALFMM_BUILD_TESTS)
   foreach(t testRotationTsm testChebyshevTsm)
     add_executable(${t} Tests/${t}.cpp)
     target_link_libraries(${t} PRIVATE scalfmm)
-    add_test(NAME ${t} COMMAND ${t})
+    add_test(NAME ${t} COMMAND ${t} 2000 5000)   # <nTargets> <nSources>
   endforeach()
 endif()
 

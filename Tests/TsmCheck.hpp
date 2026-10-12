@@ -2,6 +2,7 @@
 //
 // Validation of a target/source (Tsm) FMM on fixed particles:
 // potentials at the targets, created by charged sources, compared with the direct sum of q/r.
+// Command line of the tests: <nTargets> <nSources> (e.g. 2000 5000, as ctest).
 
 #ifndef TSMCHECK_HPP
 #define TSMCHECK_HPP
@@ -9,18 +10,38 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #include "Components/FParticleType.hpp"
-#include "Containers/FVector.hpp"
 #include "Core/FFmmAlgorithmThreadTsm.hpp"
 #include "Utils/FPoint.hpp"
 #include "Utils/FTic.hpp"
 
-template <class FReal, class OctreeClass, class CellClass, class ContainerClass, class KernelClass, class LeafClass>
-int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FReal tolerance)
+/** Number of targets and sources from the command line: <nTargets> <nSources>, both required.
+    Returns false (after reminding the arguments and their order) if they are missing or are not
+    positive integers. */
+inline bool readParticleCounts(const int argc, char* argv[], int& nTargets, int& nSources)
 {
-    const int NbTargets = 2000, NbSources = 5000;
+    int* const counts[2] = {&nTargets, &nSources};
+    bool ok = (argc == 3);
+    for (int i = 1; ok && i < argc; ++i) {
+        char* end = nullptr;
+        const long value = std::strtol(argv[i], &end, 10);
+        ok = (end != argv[i] && *end == '\0' && value > 0 && value <= 2000000000L);
+        if (ok) *counts[i - 1] = int(value);
+    }
+    if (!ok) std::fprintf(stderr, "usage: %s <nTargets> <nSources>\n"
+                                  "  nTargets: number of targets (potential computed by FMM and by direct sum)\n"
+                                  "  nSources: number of charged sources\n"
+                                  "  example:  %s 2000 5000\n", argv[0], argv[0]);
+    return ok;
+}
+
+template <class FReal, class OctreeClass, class CellClass, class ContainerClass, class KernelClass, class LeafClass>
+int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FReal tolerance,
+             const int NbTargets, const int NbSources)
+{
     const FReal halfWidth = 0.999;
 
     struct Particle { FReal x, y, z, q; };
@@ -47,12 +68,15 @@ int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FR
     std::vector<FReal> potential(NbTargets, 0.);
     tree.forEachLeaf([&](LeafClass* leaf) {
         const FReal* const potentials = leaf->getTargets()->getPotentials();
-        const FVector<FSize>& indexes = leaf->getTargets()->getIndexes();
+        const auto& indexes = leaf->getTargets()->getIndexes();
         for (FSize idx = 0; idx < leaf->getTargets()->getNbParticles(); ++idx)
             potential[indexes[idx]] = potentials[idx];
     });
 
+    // reference: direct sum (NbTargets x NbSources interactions, OpenMP)
     double errL2 = 0., refL2 = 0.;
+    timer.tic();
+#pragma omp parallel for schedule(dynamic, 64) reduction(+ : errL2, refL2)
     for (int i = 0; i < NbTargets; ++i) {
         double direct = 0.;
         for (const Particle& s : sources)
@@ -61,10 +85,11 @@ int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FR
         errL2 += (potential[i] - direct) * (potential[i] - direct);
         refL2 += direct * direct;
     }
+    const double tDirect = timer.tacAndElapsed();
     const double relErr = std::sqrt(errL2 / refL2);
     const bool ok = relErr < tolerance;
-    std::printf("%s: %d targets, %d sources, FMM %.3f s, relative L2 error on potential %.3e (tolerance %.1e) -> %s\n",
-                name, NbTargets, NbSources, tFmm, relErr, double(tolerance), ok ? "OK" : "FAILED");
+    std::printf("%s: %d targets, %d sources, FMM %.3f s (direct %.3f s), relative L2 error on potential %.3e (tolerance %.1e) -> %s\n",
+                name, NbTargets, NbSources, tFmm, tDirect, relErr, double(tolerance), ok ? "OK" : "FAILED");
     return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
