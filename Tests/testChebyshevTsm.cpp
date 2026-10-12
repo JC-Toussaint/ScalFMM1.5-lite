@@ -1,7 +1,7 @@
 // See LICENCE file at project root
 //
 // Chebyshev interpolation kernel (1/r, symmetric M2L) with typed leaves (targets / sources).
-// Usage: testChebyshevTsm <nTargets> <nSources>   (e.g. 2000 5000)
+// Usage: testChebyshevTsm <nTargets> <nSources> <seed>   (e.g. 2000 5000 12345)
 
 #include "Components/FTypedLeaf.hpp"
 #include "Containers/FOctree.hpp"
@@ -15,7 +15,8 @@
 int main(int argc, char* argv[])
 {
     int nTargets, nSources;
-    if (!readParticleCounts(argc, argv, nTargets, nSources)) return EXIT_FAILURE;
+    long seed;
+    if (!readTestArguments(argc, argv, nTargets, nSources, seed)) return EXIT_FAILURE;
 
     typedef double FReal;
     const unsigned int ORDER = 6;
@@ -33,5 +34,5 @@ int main(int argc, char* argv[])
 
     OctreeClass tree(NbLevels, SizeSubLevels, boxWidth, centerOfBox);
     KernelClass kernels(NbLevels, boxWidth, centerOfBox, &MatrixKernel);
-    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=6)", tree, kernels, 5e-5, nTargets, nSources);
+    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=6)", tree, kernels, 5e-5, nTargets, nSources, seed);
 }

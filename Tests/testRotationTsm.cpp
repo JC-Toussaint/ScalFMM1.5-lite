@@ -2,7 +2,7 @@
 //
 // Rotation kernel (spherical harmonics, order P) with typed leaves (targets / sources),
 // same configuration as in feeLLGood.
-// Usage: testRotationTsm <nTargets> <nSources>   (e.g. 2000 5000)
+// Usage: testRotationTsm <nTargets> <nSources> <seed>   (e.g. 2000 5000 12345)
 
 #include "Components/FTypedLeaf.hpp"
 #include "Containers/FOctree.hpp"
@@ -15,7 +15,8 @@
 int main(int argc, char* argv[])
 {
     int nTargets, nSources;
-    if (!readParticleCounts(argc, argv, nTargets, nSources)) return EXIT_FAILURE;
+    long seed;
+    if (!readTestArguments(argc, argv, nTargets, nSources, seed)) return EXIT_FAILURE;
 
     typedef double FReal;
     const int P = 9;
@@ -31,5 +32,5 @@ int main(int argc, char* argv[])
 
     OctreeClass tree(NbLevels, SizeSubLevels, boxWidth, centerOfBox);
     KernelClass kernels(NbLevels, boxWidth, centerOfBox);
-    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Rotation (P=9)", tree, kernels, 1e-3, nTargets, nSources);
+    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Rotation (P=9)", tree, kernels, 1e-3, nTargets, nSources, seed);
 }

@@ -77,9 +77,10 @@ tests. CMake génère `ScalFmmConfig.h` (options ci-dessous).
     ctest              # validation Rotation et Chebyshev contre le calcul direct
     sudo make install
 
-Les tests prennent le nombre de cibles et de sources : `Build/testRotationTsm <nTargets> <nSources>`
-(de même pour `testChebyshevTsm` ; `ctest` les lance avec 2000 5000). Sans arguments, ils
-rappellent leur ordre.
+Les tests prennent le nombre de cibles et de sources et la graine du générateur aléatoire :
+`Build/testRotationTsm <nTargets> <nSources> <seed>` (de même pour `testChebyshevTsm` ; `ctest`
+les lance avec 2000 5000 12345). Une même graine redonne les mêmes positions et charges. Sans
+arguments, ils rappellent leur ordre.
 
 Installe `include/<Core|Containers|Components|Kernels|Utils|Extensions>/...` et
 `include/ScalFmmConfig.h` (même disposition que ScalFMM 1.5), ainsi que la cible CMake

@@ -2,7 +2,8 @@
 //
 // Validation of a target/source (Tsm) FMM on fixed particles:
 // potentials at the targets, created by charged sources, compared with the direct sum of q/r.
-// Command line of the tests: <nTargets> <nSources> (e.g. 2000 5000, as ctest).
+// Command line of the tests: <nTargets> <nSources> <seed> (e.g. 2000 5000 12345, as ctest).
+// The same seed gives the same targets, sources and charges (drand48).
 
 #ifndef TSMCHECK_HPP
 #define TSMCHECK_HPP
@@ -18,35 +19,43 @@
 #include "Utils/FPoint.hpp"
 #include "Utils/FTic.hpp"
 
-/** Number of targets and sources from the command line: <nTargets> <nSources>, both required.
-    Returns false (after reminding the arguments and their order) if they are missing or are not
-    positive integers. */
-inline bool readParticleCounts(const int argc, char* argv[], int& nTargets, int& nSources)
+/** Number of targets and sources and seed of the random generator from the command line:
+    <nTargets> <nSources> <seed>, all required. Returns false (after reminding the arguments and
+    their order) if they are missing or invalid. */
+inline bool readTestArguments(const int argc, char* argv[], int& nTargets, int& nSources, long& seed)
 {
-    int* const counts[2] = {&nTargets, &nSources};
-    bool ok = (argc == 3);
+    bool ok = (argc == 4);
+    long values[3] = {0, 0, 0};
     for (int i = 1; ok && i < argc; ++i) {
         char* end = nullptr;
-        const long value = std::strtol(argv[i], &end, 10);
-        ok = (end != argv[i] && *end == '\0' && value > 0 && value <= 2000000000L);
-        if (ok) *counts[i - 1] = int(value);
+        values[i - 1] = std::strtol(argv[i], &end, 10);
+        ok = (end != argv[i] && *end == '\0' && values[i - 1] >= (i == 3 ? 0 : 1)
+              && (i == 3 || values[i - 1] <= 2000000000L));
     }
-    if (!ok) std::fprintf(stderr, "usage: %s <nTargets> <nSources>\n"
-                                  "  nTargets: number of targets (potential computed by FMM and by direct sum)\n"
-                                  "  nSources: number of charged sources\n"
-                                  "  example:  %s 2000 5000\n", argv[0], argv[0]);
-    return ok;
+    if (!ok) {
+        std::fprintf(stderr, "usage: %s <nTargets> <nSources> <seed>\n"
+                             "  nTargets: number of targets (potential computed by FMM and by direct sum)\n"
+                             "  nSources: number of charged sources\n"
+                             "  seed:     seed of the random generator (non-negative integer); the same seed gives\n"
+                             "            the same positions of targets and sources and the same charges\n"
+                             "  example:  %s 2000 5000 12345\n", argv[0], argv[0]);
+        return false;
+    }
+    nTargets = int(values[0]);
+    nSources = int(values[1]);
+    seed = values[2];
+    return true;
 }
 
 template <class FReal, class OctreeClass, class CellClass, class ContainerClass, class KernelClass, class LeafClass>
 int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FReal tolerance,
-             const int NbTargets, const int NbSources)
+             const int NbTargets, const int NbSources, const long seed)
 {
     const FReal halfWidth = 0.999;
 
     struct Particle { FReal x, y, z, q; };
     std::vector<Particle> targets(NbTargets), sources(NbSources);
-    srand48(12345);
+    srand48(seed);
     auto random = [&]() { return (2. * drand48() - 1.) * halfWidth; };
 
     // indexes: targets in [0, NbTargets), sources in [NbTargets, NbTargets+NbSources)
@@ -88,8 +97,8 @@ int checkTsm(const char* name, OctreeClass& tree, KernelClass& kernels, const FR
     const double tDirect = timer.tacAndElapsed();
     const double relErr = std::sqrt(errL2 / refL2);
     const bool ok = relErr < tolerance;
-    std::printf("%s: %d targets, %d sources, FMM %.3f s (direct %.3f s), relative L2 error on potential %.3e (tolerance %.1e) -> %s\n",
-                name, NbTargets, NbSources, tFmm, tDirect, relErr, double(tolerance), ok ? "OK" : "FAILED");
+    std::printf("%s: %d targets, %d sources, seed %ld, FMM %.3f s (direct %.3f s), relative L2 error on potential %.3e (tolerance %.1e) -> %s\n",
+                name, NbTargets, NbSources, seed, tFmm, tDirect, relErr, double(tolerance), ok ? "OK" : "FAILED");
     return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
