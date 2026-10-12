@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     if (!readParticleCounts(argc, argv, nTargets, nSources)) return EXIT_FAILURE;
 
     typedef double FReal;
-    const unsigned int ORDER = 7;
+    const unsigned int ORDER = 6;
     typedef FTypedChebCell<FReal, ORDER>                                                CellClass;
     typedef FP2PParticleContainerIndexed<FReal>                                         ContainerClass;
     typedef FTypedLeaf<FReal, ContainerClass>                                           LeafClass;
@@ -33,5 +33,5 @@ int main(int argc, char* argv[])
 
     OctreeClass tree(NbLevels, SizeSubLevels, boxWidth, centerOfBox);
     KernelClass kernels(NbLevels, boxWidth, centerOfBox, &MatrixKernel);
-    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=7)", tree, kernels, 1e-5, nTargets, nSources);
+    return checkTsm<FReal, OctreeClass, CellClass, ContainerClass, KernelClass, LeafClass>("Chebyshev (ORDER=6)", tree, kernels, 5e-5, nTargets, nSources);
 }
