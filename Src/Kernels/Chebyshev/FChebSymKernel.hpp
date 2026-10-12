@@ -29,8 +29,8 @@ class FTreeCoordinate;
  *
  * This class implements the Chebyshev interpolation based FMM operators
  * exploiting the symmetries in the far-field. It implements all interfaces
- * (P2P, P2M, M2M, M2L, L2L, L2P) which are required by the FFmmAlgorithm and
- * FFmmAlgorithmThread.
+ * (P2P, P2M, M2M, M2L, L2L, L2P) which are required by the FFmmAlgorithmThread and
+ * FFmmAlgorithmThreadTsm.
  *
  * @tparam CellClass Type of cell
  * @tparam ContainerClass Type of container to store particles

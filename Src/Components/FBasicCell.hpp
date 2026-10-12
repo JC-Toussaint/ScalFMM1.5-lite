@@ -11,7 +11,7 @@
 * @class FBasicCell
 *
 * This class defines a basic cell used for examples. It extends
-* the mininum, only what is needed by FOctree and FFmmAlgorithm
+* the mininum, only what is needed by FOctree and the FMM algorithms
 * to make the things working.
 * By using this extension it will implement the FAbstractCell without
 * inheriting from it.

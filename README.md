@@ -5,8 +5,9 @@ Version épurée de [ScalFMM](https://gitlab.inria.fr/solverstack/ScalFMM) 1.5
 
 - particules **fixes** : octree `FOctree`, feuilles `FSimpleLeaf` / `FTypedLeaf`
   (pas d'arrangers ni d'algorithmes de déplacement de particules) ;
-- algorithmes séquentiels et OpenMP : `FFmmAlgorithm`, `FFmmAlgorithmThread`,
-  et leurs variantes cibles/sources `FFmmAlgorithmTsm`, `FFmmAlgorithmThreadTsm` ;
+- algorithmes OpenMP : `FFmmAlgorithmThread` (feuilles simples) et sa variante cibles/sources
+  `FFmmAlgorithmThreadTsm` (celle de feeLLGood). Pour un calcul séquentiel :
+  `OMP_NUM_THREADS=1` (mêmes résultats, au bit près) ;
 - deux noyaux seulement :
   - **Rotation** (harmoniques sphériques) : `Kernels/Rotation`,
   - **Chebyshev** (interpolation) : `Kernels/Chebyshev` (`FChebKernel`, `FChebSymKernel`,
@@ -51,7 +52,8 @@ Conservés faute d'équivalent standard : l'abstraction SIMD de `FMath` (P2P vec
 Octree allégé (idées reprises du scalFMMlight de feeLLGood) : sans périodicité ni recherches de
 voisins inutilisées, `FTreeCoordinate` autonome (ne dérive plus de `FPoint`).
 
-Supprimés : MPI (dont la sérialisation des cellules et conteneurs), forces (P2P multi-seconds
+Supprimés : algorithmes séquentiels (`FFmmAlgorithm`, `FFmmAlgorithmTsm`), MPI (dont la
+sérialisation des cellules et conteneurs), forces (P2P multi-seconds
 membres et tensoriel, L2P du gradient), StarPU, CUDA/OpenCL,
 GroupTree, périodicité, FFT et noyaux Uniform/Taylor/Spherical, lecteurs de fichiers, Addons,
 journal de débogage (`FLog`) et statistiques mémoire (`FMemStats`), documentation, tests unitaires,
